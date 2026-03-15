@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <style>
+    @page { size: A4; margin: 0; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { margin: 0; font-family: Georgia, "Times New Roman", serif; }
+    .page {
+      width: 210mm;
+      height: 297mm;
+      position: relative;
+      overflow: hidden;
+      background-image: url('{{bg_data_url}}');
+      background-repeat: no-repeat;
+      background-position: center center;
+      background-size: 210mm 297mm;
+    }
+
+    .student-name {
+      position: absolute;
+      left: 50%;
+      top: 38.5%;
+      transform: translateX(-50%);
+      width: 80%;
+      text-align: center;
+      color: #123f73;
+      font-size: 24mm;
+      font-weight: 700;
+      line-height: 1.05;
+      word-break: break-word;
+    }
+
+    .certificate-id-label {
+      position: absolute;
+      left: 28%;
+      bottom: 14.3%;
+      transform: translateX(-50%);
+      color: #3d587a;
+      font-size: 3.2mm;
+      letter-spacing: 0.9mm;
+      text-transform: uppercase;
+    }
+
+    .certificate-id {
+      position: absolute;
+      left: 28%;
+      bottom: 10.6%;
+      transform: translateX(-50%);
+      color: #123f73;
+      font-size: 5.6mm;
+      font-weight: 700;
+      word-break: break-word;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="student-name">{{student_name}}</div>
+    <div class="certificate-id-label">Certificate ID</div>
+    <div class="certificate-id">{{certificate_number}}</div>
+  </div>
+</body>
+</html>
