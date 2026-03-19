@@ -291,10 +291,10 @@ export default function SignupInstitution() {
             </View>
           )}
 
-          <ButtonComp title="Agree & Join" onPress={handleSignup} />
+          <ButtonComp title="Create Account" onPress={handleSignup} />
 
           <Text style={styles.footerText}>
-            Already on CCS?{" "}
+            Already have an account?{" "}
             <Text
               style={styles.footerLink}
               onPress={() => router.push("/(auth)/login")}

@@ -9,37 +9,24 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StatusBar,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { moderateScale, verticalScale, scale } from "react-native-size-matters";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { apiRequest } from "../../services/api";
-import ButtonComp from "../../components/atoms/ButtonComp";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [emailError, setEmailError] = useState("");
-
-  const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (email && !emailRegex.test(email)) {
-      setEmailError("Please enter a valid email address");
-      return false;
-    }
-    setEmailError("");
-    return true;
-  };
 
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert("Error", "Please fill all fields");
       return;
     }
-    if (!validateEmail(email)) return;
 
     try {
       const { data, error } = await apiRequest("/auth/login", "POST", {
@@ -53,18 +40,28 @@ export default function Login() {
         await AsyncStorage.setItem("token", data.token);
         await AsyncStorage.setItem("user", JSON.stringify(data.user));
 
-        if (!data.user.profile_completed) {
-          if (data.user.user_type === 3) router.replace("/(onboarding)/student");
-          else if (data.user.user_type === 7) router.replace("/(onboarding)/company");
-          else if (data.user.user_type === 6) router.replace("/(onboarding)/school");
-          else if (data.user.user_type === 4) router.replace("/(onboarding)/college");
-          else if (data.user.user_type === 5) router.replace("/(onboarding)/university");
+        const user = data.user;
+        const type = user.user_type;
+
+        if (user.profile_completed === false || user.profile_completed === 0) {
+          const onboardingRoutes: Record<number, any> = {
+            3: "/(onboarding)/student",
+            7: "/(onboarding)/company",
+            6: "/(onboarding)/school",
+            4: "/(onboarding)/college",
+            5: "/(onboarding)/university",
+          };
+          router.replace(onboardingRoutes[type] || "/(auth)/login");
         } else {
-          if (data.user.user_type === 3) router.replace("/(student)");
-          else if (data.user.user_type === 7) router.replace("/(company)");
-          else if (data.user.user_type === 6) router.replace("/(school)");
-          else if (data.user.user_type === 4) router.replace("/(college)");
-          else if (data.user.user_type === 5) router.replace("/(university)");
+          // FIXED: Changed "/(student)/profile" to "/(student)" to hit Dashboard
+          const dashboardRoutes: Record<number, any> = {
+            3: "/(student)", 
+            7: "/(company)",
+            6: "/(school)",
+            4: "/(college)",
+            5: "/(university)",
+          };
+          router.replace(dashboardRoutes[type] || "/(auth)/login");
         }
       }
     } catch (err: any) {
@@ -73,69 +70,77 @@ export default function Login() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" />
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
       >
         <ScrollView
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={styles.container}
+          contentContainerStyle={styles.scrollContainer}
         >
-          <Text style={styles.title}>Welcome back</Text>
-          <Text style={styles.subtitle}>Sign in to continue</Text>
-
-          <Text style={styles.label}>Email</Text>
-          <TextInput
-            style={[styles.input, emailError ? styles.inputError : null]}
-            placeholder="email@example.com"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            value={email}
-            onChangeText={(text) => {
-              setEmail(text);
-              if (emailError) validateEmail(text);
-            }}
-            onBlur={() => validateEmail(email)}
-          />
-          {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
-
-          <Text style={styles.label}>Password</Text>
-          <View style={styles.passwordWrapper}>
-            <TextInput
-              style={styles.passwordInput}
-              placeholder="Password"
-              secureTextEntry={!showPassword}
-              value={password}
-              onChangeText={setPassword}
-            />
-            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-              <Ionicons
-                name={showPassword ? "eye-off" : "eye"}
-                size={20}
-                color="#999"
-              />
-            </TouchableOpacity>
+          <View style={styles.header}>
+            <Text style={styles.title}>Sign in</Text>
+            <Text style={styles.subtitle}>Stay updated on your professional world</Text>
           </View>
 
-          <TouchableOpacity
-            style={styles.forgotPassword}
-            onPress={() => router.push("/(auth)/forgot-password")}
-          >
-            <Text style={styles.forgotPasswordText}>Forgot password?</Text>
-          </TouchableOpacity>
+          <View style={styles.form}>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Email"
+                placeholderTextColor="#999"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                value={email}
+                onChangeText={setEmail}
+              />
+            </View>
 
-          <ButtonComp title="Sign In" onPress={handleLogin} />
+            <View style={styles.inputContainer}>
+              <View style={styles.passwordRow}>
+                <TextInput
+                  style={styles.passwordInput}
+                  placeholder="Password"
+                  placeholderTextColor="#999"
+                  secureTextEntry={!showPassword}
+                  value={password}
+                  onChangeText={setPassword}
+                />
+                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                  <Ionicons
+                    name={showPassword ? "eye" : "eye-off"}
+                    size={20}
+                    color="#666"
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
 
-          <Text style={styles.footerText}>
-            Don't have an account?{" "}
-            <Text
-              style={styles.footerLink}
-              onPress={() => router.push("/(auth)/signup")}
+            <TouchableOpacity
+              style={styles.forgotPassword}
+              onPress={() => router.push("/(auth)/forgot-password")}
             >
-              Sign Up
-            </Text>
-          </Text>
+              <Text style={styles.forgotPasswordText}>Forgot password?</Text>
+            </TouchableOpacity>
+
+            {/* THIN RECTANGULAR BUTTON */}
+            <TouchableOpacity 
+              style={styles.signInBtn} 
+              onPress={handleLogin}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.signInBtnText}>Sign in</Text>
+            </TouchableOpacity>
+
+            <View style={styles.footer}>
+              <Text style={styles.footerText}>Don't have an account? </Text>
+              <TouchableOpacity onPress={() => router.push("/(auth)/signup")}>
+                <Text style={styles.footerLink}>Create account</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -143,77 +148,40 @@ export default function Login() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: scale(20),
-    paddingTop: verticalScale(60),
-    paddingBottom: verticalScale(40),
-    backgroundColor: "white",
+  safeArea: { flex: 1, backgroundColor: "white" },
+  scrollContainer: { paddingHorizontal: 22, paddingTop: 30 },
+  header: { marginBottom: 25 },
+  title: { fontSize: 28, fontWeight: "600", color: "#000", marginBottom: 4 },
+  subtitle: { fontSize: 14, color: "#666", fontWeight: "400" },
+  form: { width: "100%" },
+  inputContainer: { 
+    borderWidth: 1, 
+    borderColor: "#ccc", 
+    borderRadius: 4, 
+    marginBottom: 12, 
+    paddingHorizontal: 12, 
+    height: 48, 
+    justifyContent: "center" 
   },
-  title: {
-    fontSize: moderateScale(28),
-    fontWeight: "700",
-    color: "#000",
-    marginBottom: verticalScale(8),
+  input: { fontSize: 15, color: "#000", height: "100%" },
+  passwordRow: { flexDirection: "row", alignItems: "center" },
+  passwordInput: { flex: 1, fontSize: 15, color: "#000", height: "100%" },
+  forgotPassword: { marginBottom: 20, marginTop: 5 },
+  forgotPasswordText: { color: "#0052cc", fontSize: 15, fontWeight: "600" },
+  
+  // FIXED BUTTON: Thin and Rectangular
+  signInBtn: { 
+    backgroundColor: "#0052cc", 
+    width: "100%", 
+    height: 44, 
+    borderRadius: 4, 
+    justifyContent: "center", 
+    alignItems: "center", 
+    marginBottom: 25 
   },
-  subtitle: {
-    fontSize: moderateScale(15),
-    color: "#666",
-    marginBottom: verticalScale(40),
-  },
-  label: {
-    fontSize: moderateScale(14),
-    fontWeight: "600",
-    color: "#333",
-    marginBottom: verticalScale(8),
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: moderateScale(8),
-    padding: moderateScale(14),
-    marginBottom: verticalScale(16),
-    fontSize: moderateScale(15),
-  },
-  inputError: {
-    borderColor: "#EF4444",
-    marginBottom: verticalScale(4),
-  },
-  errorText: {
-    color: "#EF4444",
-    fontSize: moderateScale(12),
-    marginBottom: verticalScale(12),
-  },
-  passwordWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: moderateScale(8),
-    paddingHorizontal: scale(14),
-    marginBottom: verticalScale(12),
-  },
-  passwordInput: {
-    flex: 1,
-    paddingVertical: moderateScale(14),
-    fontSize: moderateScale(15),
-  },
-  forgotPassword: {
-    alignSelf: "flex-end",
-    marginBottom: verticalScale(24),
-  },
-  forgotPasswordText: {
-    color: "#0A66C2",
-    fontSize: moderateScale(14),
-    fontWeight: "600",
-  },
-  footerText: {
-    marginTop: verticalScale(24),
-    textAlign: "center",
-    color: "#666",
-    fontSize: moderateScale(14),
-  },
-  footerLink: {
-    color: "#0A66C2",
-    fontWeight: "600",
-  },
+  signInBtnText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+  
+  footer: { flexDirection: "row", justifyContent: "center", alignItems: "center", marginTop: 10 },
+  footerText: { fontSize: 14, color: "#666" },
+  footerLink: { fontSize: 14, color: "#0052cc", fontWeight: "600" },
 });
