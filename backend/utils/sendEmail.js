@@ -1,56 +1,23 @@
 require("dotenv").config();
-const nodemailer = require("nodemailer");
-
+const { Resend } = require("resend");
+ 
+const resend = new Resend(process.env.RESEND_API_KEY);
+ 
 const FRONTEND_URL = (process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/$/, "");
 const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || process.env.EMAIL_USER;
-
-const transporter = nodemailer.createTransport({
-    host: "smtp.hostinger.com",
-    port: 465,
-    secure: true,
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-    },
-});
-
-transporter.verify((error, success) => {
-    if (error) {
-        console.error("Email transporter error:", error.message);
-    } else {
-        console.log("Email transporter ready:", success);
-    }
-});
-
-const baseMailOptions = {
-    from: `"CCS Platform" <${process.env.EMAIL_USER}>`,
-    replyTo: SUPPORT_EMAIL,
-    headers: {
-        "Auto-Submitted": "auto-generated",
-        "X-Auto-Response-Suppress": "All",
-    },
-};
-
+ 
 const sendMail = async ({ to, subject, html, text }) => {
-    const result = await transporter.sendMail({
-        ...baseMailOptions,
+    const result = await resend.emails.send({
+        from: "CCS Platform <onboarding@resend.dev>",
         to,
         subject,
         html,
         text,
     });
-
-    console.log("Email sent:", {
-        to,
-        subject,
-        messageId: result.messageId,
-        accepted: result.accepted,
-        rejected: result.rejected,
-    });
-
+    console.log("Email sent:", result);
     return result;
 };
-
+ 
 const ensureAbsoluteUrl = (url) => {
     if (!url || typeof url !== "string") return null;
     const trimmed = url.trim();
@@ -58,11 +25,11 @@ const ensureAbsoluteUrl = (url) => {
     if (/^https?:\/\//i.test(trimmed)) return trimmed;
     return `https://${trimmed}`;
 };
-
+ 
 exports.sendVerificationEmail = async (to, token) => {
     const verifyUrl = `${FRONTEND_URL}/verify-email/${token}`;
     const subject = "Verify your email";
-
+ 
     const html = `
       <!DOCTYPE html>
       <html>
@@ -77,20 +44,20 @@ exports.sendVerificationEmail = async (to, token) => {
       </body>
       </html>
     `;
-
+ 
     const text = [
         "Welcome to CCS Platform",
         `Please verify your email: ${verifyUrl}`,
         "If you did not register, you can safely ignore this email.",
     ].join("\n");
-
+ 
     return sendMail({ to, subject, html, text });
 };
-
+ 
 exports.sendResetPasswordEmail = async (to, token) => {
     const resetUrl = `${FRONTEND_URL}/reset-password/${token}`;
     const subject = "Password reset request";
-
+ 
     const html = `
       <!DOCTYPE html>
       <html>
@@ -132,21 +99,21 @@ exports.sendResetPasswordEmail = async (to, token) => {
       </body>
       </html>
     `;
-
+ 
     const text = [
         "Password reset request",
         `Reset link: ${resetUrl}`,
         "This link expires in 15 minutes.",
         "If you did not request this, ignore this email.",
     ].join("\n");
-
+ 
     return sendMail({ to, subject, html, text });
 };
-
+ 
 exports.sendWelcomeStudentEmail = async (to, studentName, userType = "Student / Professional") => {
     const loginLink = `${FRONTEND_URL}/login`;
     const subject = "Welcome to CCS - Let's get started";
-
+ 
     const html = `
       <!DOCTYPE html>
       <html>
@@ -185,25 +152,25 @@ exports.sendWelcomeStudentEmail = async (to, studentName, userType = "Student / 
       </body>
       </html>
     `;
-
+ 
     const text = [
         `Hi ${studentName || "User"},`,
         `Your CCS account has been created as ${userType}.`,
         `Login: ${loginLink}`,
     ].join("\n");
-
+ 
     return sendMail({ to, subject, html, text });
 };
-
-  exports.sendWelcomeOrganizationEmail = async (to, name, userType) => {
+ 
+exports.sendWelcomeOrganizationEmail = async (to, name, userType) => {
     return exports.sendWelcomeStudentEmail(to, name, userType || "User");
-  };
-
+};
+ 
 exports.sendJobApplicationEmail = async (to, studentName, jobDetails) => {
     const dashboardLink = `${FRONTEND_URL}/dashboard`;
     const { jobTitle = "Job", companyName = "Company", jobLocation = "Not specified", applicationDate = new Date().toLocaleDateString() } = jobDetails || {};
     const subject = "Your application has been submitted";
-
+ 
     const html = `
       <!DOCTYPE html>
       <html>
@@ -232,7 +199,7 @@ exports.sendJobApplicationEmail = async (to, studentName, jobDetails) => {
       </body>
       </html>
     `;
-
+ 
     const text = [
         `Hi ${studentName || "User"},`,
         `Application submitted for ${jobTitle} at ${companyName}.`,
@@ -240,17 +207,17 @@ exports.sendJobApplicationEmail = async (to, studentName, jobDetails) => {
         `Application Date: ${applicationDate}`,
         `Dashboard: ${dashboardLink}`,
     ].join("\n");
-
+ 
     return sendMail({ to, subject, html, text });
 };
-
+ 
 exports.sendJobLiveEmail = async (to, companyName, jobDetails) => {
     const jobLink = `${FRONTEND_URL}/jobs/${jobDetails?.jobId || ""}`;
     const jobTitle = jobDetails?.title || "Job";
     const jobLocation = jobDetails?.location || "Not specified";
     const postedDate = jobDetails?.postedDate || new Date().toLocaleDateString();
     const subject = "Your job is now live on CCS";
-
+ 
     const html = `
       <!DOCTYPE html>
       <html>
@@ -279,7 +246,7 @@ exports.sendJobLiveEmail = async (to, companyName, jobDetails) => {
       </body>
       </html>
     `;
-
+ 
     const text = [
         `Hi ${companyName || "Company"} Team,`,
         `Your job is live: ${jobTitle}`,
@@ -287,10 +254,10 @@ exports.sendJobLiveEmail = async (to, companyName, jobDetails) => {
         `Posted On: ${postedDate}`,
         `View: ${jobLink}`,
     ].join("\n");
-
+ 
     return sendMail({ to, subject, html, text });
 };
-
+ 
 exports.sendEventApplicationEmail = async (to, studentName, eventDetails) => {
     const safeName = studentName || "Student";
     const eventName = eventDetails?.eventName || "Event";
@@ -302,16 +269,16 @@ exports.sendEventApplicationEmail = async (to, studentName, eventDetails) => {
     const location = eventDetails?.location || "Not specified";
     const dashboardLink = `${FRONTEND_URL}/dashboard`;
     const subject = "Event application received";
-
+ 
     const joinSection = eventType === "online" && joinLink
         ? `<p style="margin: 16px 0 0 0;"><a href="${joinLink}" class="btn" style="color: #ffffff; text-decoration: none;">Join Event</a></p>
            <p style="margin: 12px 0 0 0; font-size: 13px; color: #4b5563; word-break: break-all;">Join link: ${joinLink}</p>`
         : `<p style="margin: 12px 0 0 0; color: #4b5563;">Location: ${location}</p>`;
-
+ 
     const textJoinSection = eventType === "online" && joinLink
         ? `Join link: ${joinLink}`
         : `Location: ${location}`;
-
+ 
     const html = `
       <!DOCTYPE html>
       <html>
@@ -342,7 +309,7 @@ exports.sendEventApplicationEmail = async (to, studentName, eventDetails) => {
       </body>
       </html>
     `;
-
+ 
     const text = [
         `Hi ${safeName},`,
         `Your application for ${eventName} has been received.`,
@@ -352,10 +319,10 @@ exports.sendEventApplicationEmail = async (to, studentName, eventDetails) => {
         textJoinSection,
         `Dashboard: ${dashboardLink}`,
     ].join("\n");
-
+ 
     return sendMail({ to, subject, html, text });
 };
-
+ 
 exports.sendFundraisingApplicationEmail = async (to, studentName, eventDetails) => {
     const safeName = studentName || "Student";
     const eventTitle = eventDetails?.eventTitle || "Fundraising Event";
@@ -368,7 +335,7 @@ exports.sendFundraisingApplicationEmail = async (to, studentName, eventDetails) 
     const applicationId = eventDetails?.applicationId || "";
     const dashboardLink = `${FRONTEND_URL}/student/fundraising-applications`;
     const subject = "Fundraising Application Received - CCS Platform";
-
+ 
     const html = `
       <!DOCTYPE html>
       <html>
@@ -401,7 +368,6 @@ exports.sendFundraisingApplicationEmail = async (to, studentName, eventDetails) 
           <div class="content">
             <p style="font-size: 16px; color: #1f2937;">Hi <strong>${safeName}</strong>,</p>
             <p style="color: #4b5563;">Thank you for applying to the fundraising event. Your application is now under review.</p>
-            
             <div class="info-card">
               <div class="info-row">
                 <span class="info-label">Event</span>
@@ -424,13 +390,10 @@ exports.sendFundraisingApplicationEmail = async (to, studentName, eventDetails) 
                 <span class="info-value">₹${estimatedBudget}</span>
               </div>
             </div>
-
-            <p style="color: #4b5563; font-size: 14px;">You will be notified via email once your application status is updated. You can also track your application status in your dashboard.</p>
-            
+            <p style="color: #4b5563; font-size: 14px;">You will be notified via email once your application status is updated.</p>
             <div style="text-align: center;">
               <a href="${dashboardLink}" class="btn">Track My Applications</a>
             </div>
-            
             <p style="margin-top: 28px; color: #1f2937;">Best regards,<br/><strong style="color: #ec4899;">Team CCS</strong></p>
           </div>
           <div class="footer">
@@ -441,7 +404,7 @@ exports.sendFundraisingApplicationEmail = async (to, studentName, eventDetails) 
       </body>
       </html>
     `;
-
+ 
     const text = [
         `Hi ${safeName},`,
         "",
@@ -460,6 +423,6 @@ exports.sendFundraisingApplicationEmail = async (to, studentName, eventDetails) 
         "Best regards,",
         "Team CCS",
     ].join("\n");
-
+ 
     return sendMail({ to, subject, html, text });
 };
