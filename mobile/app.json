@@ -9,11 +9,18 @@
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.aswebccs.ccsmobile"
     },
     "plugins": [
       "expo-router",
       "@react-native-community/datetimepicker"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "2a1ef697-389e-4270-9708-151a8ca6d013"
+      }
+    }
   }
 }
