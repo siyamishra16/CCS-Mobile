@@ -1,279 +1,3 @@
-// import React, { useState, useEffect } from "react";
-// import {
-//   View,
-//   Text,
-//   StyleSheet,
-//   TextInput,
-//   TouchableOpacity,
-//   FlatList,
-//   Platform,
-//   StatusBar,
-//   ScrollView,
-//   ActivityIndicator,
-// } from "react-native";
-// import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-// import { router } from "expo-router";
-// import { useSafeAreaInsets } from "react-native-safe-area-context";
-// import { supabase } from "../../lib/supabase";
-
-// export default function JobsScreen() {
-//   const [jobs, setJobs] = useState<any[]>([]);
-//   const [loading, setLoading] = useState(true);
-//   const [search, setSearch] = useState("");
-//   const insets = useSafeAreaInsets();
-
-//   useEffect(() => {
-//     fetchJobs();
-//   }, []);
-
-//   const fetchJobs = async () => {
-//     try {
-//       setLoading(true);
-//       const { data, error } = await supabase
-//         .from("company_jobs")
-//         .select("*")
-//         .order("created_at", { ascending: false });
-
-//       if (error) throw error;
-//       setJobs(data || []);
-//     } catch (error) {
-//       console.error("Error fetching jobs:", error);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   const renderJobCard = ({ item }: { item: any }) => (
-//     <View style={styles.jobCard}>
-//       <View style={styles.cardHeader}>
-//         <View style={styles.textContainer}>
-//           <Text style={styles.jobTitle} numberOfLines={1}>{item.title || "Untitled Role"}</Text>
-//           <Text style={styles.companyName}>Company Name</Text>
-//         </View>
-//       </View>
-
-//       <View style={styles.infoRow}>
-//         <Ionicons name="location-outline" size={13} color="#666" />
-//         <Text style={styles.infoText}>
-//           {item.location_type || "Remote"} | {item.location || "N/A"}
-//         </Text>
-//       </View>
-
-//       <View style={styles.infoRow}>
-//         <Text style={styles.salaryText}>
-//           ₹ {item.pay_min || "-"} - ₹ {item.pay_max || "-"} / {item.pay_rate || "month"}
-//         </Text>
-//       </View>
-
-//       <View style={styles.tagRow}>
-//         <View style={styles.tagPill}>
-//           <Text style={styles.tagText}>Client Servicing</Text>
-//         </View>
-//         <View style={styles.morePill}>
-//           <Text style={styles.moreText}>+3</Text>
-//         </View>
-//       </View>
-
-//       <View style={styles.cardFooter}>
-//         <Text style={styles.dateText}>
-//           {item.created_at ? new Date(item.created_at).toLocaleDateString('en-US', {
-//              month: 'short', day: 'numeric', year: 'numeric'
-//           }) : "Recent"}
-//         </Text>
-//         <TouchableOpacity>
-//           <Ionicons name="heart-outline" size={18} color="#4285F4" />
-//         </TouchableOpacity>
-//       </View>
-//     </View>
-//   );
-
-//   // Bottom bar height: padding inside bar + safe area inset for home indicator/nav buttons
-//   const bottomBarHeight = 64 + insets.bottom;
-
-//   return (
-//     <View style={styles.container}>
-//       <StatusBar barStyle="dark-content" backgroundColor="#FFF" translucent={true} />
-      
-//       <View style={styles.headerWrapper}>
-//         <View style={styles.searchContainer}>
-//             <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-//               <Ionicons name="arrow-back" size={22} color="#333" />
-//             </TouchableOpacity>
-//             <View style={styles.searchBox}>
-//               <Ionicons name="search-outline" size={18} color="#999" />
-//               <TextInput
-//                   placeholder="Search Jobs"
-//                   placeholderTextColor="#999"
-//                   style={styles.input}
-//                   value={search}
-//                   onChangeText={setSearch}
-//               />
-//             </View>
-//         </View>
-
-//         <View style={styles.topFilterScroll}>
-//             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{paddingHorizontal: 15}}>
-//                 <FilterPill icon="code-tags" label="Developer" active />
-//                 <FilterPill icon="clipboard-list-outline" label="Product" />
-//                 <FilterPill icon="chart-bar" label="Analytics" />
-//                 <FilterPill icon="bullhorn-outline" label="Marketing" />
-//             </ScrollView>
-//         </View>
-//       </View>
-
-//       {loading ? (
-//         <ActivityIndicator size="small" color="#4285F4" style={{marginTop: 50}} />
-//       ) : (
-//         <FlatList
-//           data={jobs.filter(j => j.title?.toLowerCase().includes(search.toLowerCase()))}
-//           renderItem={renderJobCard}
-//           keyExtractor={(item) => item.id.toString()}
-//           contentContainerStyle={[styles.listContent, { paddingBottom: bottomBarHeight + 16 }]}
-//           showsVerticalScrollIndicator={false}
-//         />
-//       )}
-
-//       {/* BOTTOM FILTER BAR — pinned to bottom, respects safe area */}
-//       <View style={[styles.bottomFilterBar, { paddingBottom: insets.bottom || 12 }]}>
-//         <TouchableOpacity style={[styles.bottomBtn, styles.activeBottomBtn]}>
-//             <Text style={styles.activeBottomBtnText}>Type</Text>
-//             <Ionicons name="chevron-down" size={14} color="#FFF" />
-//         </TouchableOpacity>
-//         <TouchableOpacity style={styles.bottomBtn}>
-//             <Text style={styles.bottomBtnText}>Location</Text>
-//         </TouchableOpacity>
-//         <TouchableOpacity style={styles.bottomBtn}>
-//             <Text style={styles.bottomBtnText}>Roles</Text>
-//         </TouchableOpacity>
-//         <TouchableOpacity style={styles.filterIconBtn}>
-//             <MaterialCommunityIcons name="filter-variant" size={20} color="#FFF" />
-//         </TouchableOpacity>
-//       </View>
-//     </View>
-//   );
-// }
-
-// const FilterPill = ({ icon, label, active }: any) => (
-//   <TouchableOpacity style={[styles.pill, active && styles.activePill]}>
-//     <MaterialCommunityIcons name={icon} size={16} color={active ? "#FFF" : "#333"} />
-//     <Text style={[styles.pillText, active && styles.activePillText]}>{label}</Text>
-//   </TouchableOpacity>
-// );
-
-// const styles = StyleSheet.create({
-//   container: { 
-//     flex: 1, 
-//     backgroundColor: "#FFF",
-//   },
-//   headerWrapper: {
-//     paddingTop: Platform.OS === "android" ? (StatusBar.currentHeight || 0) + 15 : 60, 
-//     backgroundColor: '#FFF',
-//     borderBottomWidth: 1,
-//     borderBottomColor: '#F0F0F0',
-//     paddingBottom: 5,
-//   },
-//   searchContainer: { 
-//     flexDirection: 'row', 
-//     alignItems: 'center', 
-//     paddingHorizontal: 15, 
-//     marginBottom: 10 
-//   },
-//   backBtn: { marginRight: 10 },
-//   searchBox: { 
-//     flex: 1, 
-//     flexDirection: 'row', 
-//     alignItems: 'center', 
-//     backgroundColor: '#F7F7F7', 
-//     borderRadius: 12, 
-//     paddingHorizontal: 12, 
-//     height: 40,
-//   },
-//   input: { flex: 1, marginLeft: 8, fontSize: 14, color: '#333' },
-//   topFilterScroll: { marginBottom: 10 },
-//   pill: { 
-//     flexDirection: 'row', 
-//     alignItems: 'center', 
-//     paddingHorizontal: 10, 
-//     paddingVertical: 6, 
-//     borderRadius: 8, 
-//     borderWidth: 1, 
-//     borderColor: '#EEE',
-//     marginRight: 8,
-//     backgroundColor: '#FFF'
-//   },
-//   activePill: { backgroundColor: '#4285F4', borderColor: '#4285F4' },
-//   pillText: { marginLeft: 6, fontSize: 12, fontWeight: '500', color: '#333' },
-//   activePillText: { color: '#FFF' },
-//   listContent: { 
-//     paddingHorizontal: 15, 
-//     paddingTop: 15,
-//   },
-//   jobCard: { 
-//     backgroundColor: '#FFF', 
-//     borderRadius: 12, 
-//     padding: 12, 
-//     marginBottom: 12, 
-//     borderWidth: 1, 
-//     borderColor: '#F0F0F0',
-//     elevation: 2,
-//     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 1 },
-//     shadowOpacity: 0.1,
-//     shadowRadius: 2,
-//   },
-//   cardHeader: { flexDirection: 'row', marginBottom: 4 },
-//   textContainer: { flex: 1 },
-//   jobTitle: { fontSize: 15, fontWeight: '700', color: '#1A1A1A' },
-//   companyName: { fontSize: 12, color: '#888' },
-//   infoRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
-//   infoText: { marginLeft: 5, color: '#666', fontSize: 12 },
-//   salaryText: { color: '#333', fontWeight: '600', fontSize: 12, marginTop: 4 },
-//   tagRow: { flexDirection: 'row', marginTop: 12 },
-//   tagPill: { backgroundColor: '#F2F2F2', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 },
-//   tagText: { color: '#333', fontSize: 10, fontWeight: '600' },
-//   morePill: { backgroundColor: '#F0F9F0', paddingHorizontal: 6, paddingVertical: 4, borderRadius: 12, marginLeft: 6 },
-//   moreText: { color: '#2E7D32', fontSize: 10, fontWeight: '700' },
-//   cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, borderTopWidth: 1, borderTopColor: '#FAFAFA', paddingTop: 10 },
-//   dateText: { color: '#4285F4', fontWeight: '500', fontSize: 11 },
-  
-//   bottomFilterBar: { 
-//     position: 'absolute', 
-//     bottom: 0,
-//     left: 0,
-//     right: 0,
-//     flexDirection: 'row', 
-//     alignItems: 'center',
-//     justifyContent: 'space-around',
-//     paddingHorizontal: 20,
-//     paddingTop: 12,
-//     backgroundColor: '#FFF',
-//     borderTopWidth: 1,
-//     borderTopColor: '#F0F0F0',
-//     zIndex: 999,
-//     elevation: 10,
-//     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: -2 },
-//     shadowOpacity: 0.06,
-//     shadowRadius: 6,
-//   },
-//   bottomBtn: { 
-//     backgroundColor: '#FFF', 
-//     paddingHorizontal: 20, 
-//     paddingVertical: 9, 
-//     borderRadius: 20, 
-//     borderWidth: 1, 
-//     borderColor: '#DDD',
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//   },
-//   activeBottomBtn: { backgroundColor: '#4285F4', borderColor: '#4285F4' },
-//   activeBottomBtnText: { color: '#FFF', fontWeight: '600', fontSize: 12, marginRight: 4 },
-//   bottomBtnText: { color: '#333', fontWeight: '600', fontSize: 12 },
-//   filterIconBtn: { backgroundColor: '#1A233A', padding: 11, borderRadius: 20 }
-// });
-
-
-
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -390,56 +114,69 @@ export default function JobsScreen() {
 
   const bottomBarHeight = 64 + insets.bottom;
 
-  const renderJobCard = ({ item }: { item: any }) => (
-    <View style={styles.jobCard}>
-      <View style={styles.cardHeader}>
-        <View style={styles.textContainer}>
-          <Text style={styles.jobTitle} numberOfLines={1}>
-            {item.title || "Untitled Role"}
-          </Text>
-          <Text style={styles.companyName}>Company Name</Text>
-        </View>
-      </View>
-
-      <View style={styles.infoRow}>
-        <Ionicons name="location-outline" size={13} color="#666" />
-        <Text style={styles.infoText}>
-          {item.location_type || "Remote"} | {item.location || "N/A"}
+  // Is function ko apne code mein dhundo aur isse replace kar do
+const renderJobCard = ({ item }: { item: any }) => (
+  <TouchableOpacity 
+    style={styles.jobCard} 
+    activeOpacity={0.7}
+    onPress={() => router.push({
+      pathname: "/(student)/job-details",
+      params: { job: JSON.stringify(item) } // Poora job object string banakar bhej rahe hain
+    })}
+  >
+    <View style={styles.cardHeader}>
+      <View style={styles.textContainer}>
+        <Text style={styles.jobTitle} numberOfLines={1}>
+          {item.title || "Untitled Role"}
         </Text>
-      </View>
-
-      <View style={styles.infoRow}>
-        <Text style={styles.salaryText}>
-          ₹ {item.pay_min || "-"} - ₹ {item.pay_max || "-"} /{" "}
-          {item.pay_rate || "month"}
-        </Text>
-      </View>
-
-      <View style={styles.tagRow}>
-        <View style={styles.tagPill}>
-          <Text style={styles.tagText}>Client Servicing</Text>
-        </View>
-        <View style={styles.morePill}>
-          <Text style={styles.moreText}>+3</Text>
-        </View>
-      </View>
-
-      <View style={styles.cardFooter}>
-        <Text style={styles.dateText}>
-          {item.created_at
-            ? new Date(item.created_at).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })
-            : "Recent"}
-        </Text>
-        <TouchableOpacity>
-          <Ionicons name="heart-outline" size={18} color="#4285F4" />
-        </TouchableOpacity>
+        <Text style={styles.companyName}>Company Name</Text>
       </View>
     </View>
-  );
+
+    <View style={styles.infoRow}>
+      <Ionicons name="location-outline" size={13} color="#666" />
+      <Text style={styles.infoText}>
+        {item.location_type || "Remote"} | {item.location || "N/A"}
+      </Text>
+    </View>
+
+    <View style={styles.infoRow}>
+      <Text style={styles.salaryText}>
+        ₹ {item.pay_min || "-"} - ₹ {item.pay_max || "-"} /{" "}
+        {item.pay_rate || "month"}
+      </Text>
+    </View>
+
+    <View style={styles.tagRow}>
+      <View style={styles.tagPill}>
+        <Text style={styles.tagText}>Client Servicing</Text>
+      </View>
+      <View style={styles.morePill}>
+        <Text style={styles.moreText}>+3</Text>
+      </View>
+    </View>
+
+    <View style={styles.cardFooter}>
+      <Text style={styles.dateText}>
+        {item.created_at
+          ? new Date(item.created_at).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })
+          : "Recent"}
+      </Text>
+      <TouchableOpacity 
+        onPress={(e) => {
+          e.stopPropagation(); // Isse card click trigger nahi hoga, sirf heart click hoga
+          console.log("Saved!");
+        }}
+      >
+        <Ionicons name="heart-outline" size={18} color="#4285F4" />
+      </TouchableOpacity>
+    </View>
+  </TouchableOpacity>
+);
 
   // Generic filter modal
   const renderModal = (
