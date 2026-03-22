@@ -36,7 +36,7 @@ export default function StudentDashboard() {
   const handleLogout = async () => {
     try {
       await AsyncStorage.clear(); 
-      router.replace("/(auth)/login"); 
+      router.replace("/(onboarding)"); 
     } catch (e) {
       console.error("Failed to logout", e);
     }
