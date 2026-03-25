@@ -9,17 +9,17 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  StatusBar
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import {
-  moderateScale,
-  verticalScale,
-  scale,
-} from "react-native-size-matters";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import ButtonComp from "../../components/atoms/ButtonComp";
-import { apiRequest } from "../../services/api"
+import { apiRequest } from "../../services/api";
+
+// Style Constants
+const ACCENT_BLUE = "#1F4FA3";
+const TEXT_GRAY_22 = "#222222";
+const BORDER_BLUE_200 = "#BFDBFE";
 
 const INSTITUTION_TYPES = [
   { id: 6, label: "School" },
@@ -42,33 +42,20 @@ export default function SignupInstitution() {
 
   const handleChange = (key: string, value: any) => {
     setForm({ ...form, [key]: value });
-
     if (key === "email") {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (value && !emailRegex.test(value)) {
-        setEmailError("Please enter a valid email address");
-      } else {
-        setEmailError("");
-      }
+      setEmailError(value && !emailRegex.test(value) ? "Please enter a valid email address" : "");
     }
   };
 
-  const validatePassword = (password: string) => {
-    const hasUpperCase = /[A-Z]/.test(password);
-    const hasLowerCase = /[a-z]/.test(password);
-    const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
-    const hasNumber = /[0-9]/.test(password);
-    const hasMinLength = password.length >= 6;
-
-    return {
-      hasUpperCase,
-      hasLowerCase,
-      hasSpecialChar,
-      hasNumber,
-      hasMinLength,
-      isValid: hasUpperCase && hasLowerCase && hasSpecialChar && hasNumber && hasMinLength,
-    };
-  };
+  const validatePassword = (password: string) => ({
+    hasUpperCase: /[A-Z]/.test(password),
+    hasLowerCase: /[a-z]/.test(password),
+    hasSpecialChar: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
+    hasNumber: /[0-9]/.test(password),
+    hasMinLength: password.length >= 6,
+    isValid: /[A-Z]/.test(password) && /[a-z]/.test(password) && /[0-9]/.test(password) && password.length >= 6
+  });
 
   const passwordValidation = validatePassword(form.password);
   const passwordsMatch = form.password === form.confirm_password && form.confirm_password.length > 0;
@@ -78,230 +65,131 @@ export default function SignupInstitution() {
       Alert.alert("Error", "Please fill all required fields");
       return;
     }
-
-    if (emailError) {
-      Alert.alert("Error", "Please enter a valid email address");
-      return;
-    }
-
-    if (form.password !== form.confirm_password) {
-      Alert.alert("Error", "Passwords do not match");
-      return;
-    }
-
-    if (!passwordValidation.isValid) {
-      Alert.alert("Error", "Password does not meet requirements");
-      return;
-    }
-
     try {
-      const payload = {
+      const res = await apiRequest("/auth/register", "POST", {
         name: form.name.trim(),
         email: form.email.trim(),
         password: form.password,
         user_type: form.institution_type,
-      };
-
-      const res = await apiRequest("/auth/register", "POST", payload);
-      console.log("SIGNUP RESPONSE 👉", res);
-
-      Alert.alert(
-        "Success",
-        "Registration successful! Please verify your email before login.",
-        [
-          {
-            text: "OK",
-            onPress: () => router.replace("/(auth)/login"),
-          },
-        ]
-      );
+      });
+      Alert.alert("Success", "Registration successful! Verify your email.", [
+        { text: "OK", onPress: () => router.replace("/(auth)/login") }
+      ]);
     } catch (err: any) {
-      console.log("SIGNUP ERROR 👉", err);
       Alert.alert("Error", err?.message || "Signup failed");
     }
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={{ flex: 1 }}
-      >
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={styles.container}
-        >
-          <Text style={styles.title}>Sign up</Text>
-          <Text style={styles.subtitle}>
-            Make the most of your professional life
-          </Text>
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFF" />
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.container}>
+          
+          <View style={styles.header}>
+            <Text style={styles.title}>Sign up</Text>
+            <Text style={styles.subtitle}>Make the most of your professional life</Text>
+          </View>
 
-          {/* Toggle Between Individual and Institution */}
+          {/* User Type Label & Toggle */}
+          <Text style={styles.label}>User type *</Text>
           <View style={styles.toggleContainer}>
-            <TouchableOpacity
-              style={styles.toggleButton}
-              onPress={() => router.replace("/(auth)/signup")}
-            >
-              <Ionicons name="person" size={18} color="#666" />
+            <TouchableOpacity style={styles.toggleButton} onPress={() => router.replace("/(auth)/signup")}>
+              <Ionicons name="person" size={14} color="#64748B" />
               <Text style={styles.toggleText}>Individual</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.toggleButtonActive}>
-              <Ionicons name="business" size={18} color="#fff" />
+              <Ionicons name="business" size={14} color="#fff" />
               <Text style={styles.toggleTextActive}>Institution</Text>
             </TouchableOpacity>
           </View>
 
-          {/* Institution Type Selection */}
+          {/* Institution Type Grid */}
           <Text style={styles.label}>Select institution type *</Text>
           <View style={styles.institutionGrid}>
             {INSTITUTION_TYPES.map((type) => (
               <TouchableOpacity
                 key={type.id}
-                style={[
-                  styles.typeCard,
-                  form.institution_type === type.id && styles.typeCardActive,
-                ]}
+                style={[styles.typeCard, form.institution_type === type.id && styles.typeCardActive]}
                 onPress={() => handleChange("institution_type", type.id)}
               >
-                <Text
-                  style={[
-                    styles.typeText,
-                    form.institution_type === type.id && styles.typeTextActive,
-                  ]}
-                >
+                <Text style={[styles.typeText, form.institution_type === type.id && styles.typeTextActive]}>
                   {type.label}
                 </Text>
               </TouchableOpacity>
             ))}
           </View>
 
-          {/* Institution Name */}
-          <TextInput
-            style={styles.input}
-            placeholder="Institution name"
-            value={form.name}
-            onChangeText={(v) => handleChange("name", v)}
-          />
+          {/* Form Fields */}
+          <Text style={styles.label}>Institution Name *</Text>
+          <View style={styles.inputContainer}>
+            <TextInput style={styles.input} placeholder="e.g. Stanford University" value={form.name} onChangeText={(v) => handleChange("name", v)} placeholderTextColor="#94A3B8" />
+          </View>
 
-          {/* Email */}
-          <TextInput
-            style={[styles.input, emailError ? styles.inputError : null]}
-            placeholder="Email"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            value={form.email}
-            onChangeText={(v) => handleChange("email", v)}
-          />
+          <Text style={styles.label}>Email *</Text>
+          <View style={[styles.inputContainer, emailError ? styles.inputError : null]}>
+            <TextInput style={styles.input} placeholder="admin@institution.com" keyboardType="email-address" autoCapitalize="none" value={form.email} onChangeText={(v) => handleChange("email", v)} placeholderTextColor="#94A3B8" />
+          </View>
           {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
 
-          {/* Password */}
-          <View style={styles.passwordWrapper}>
-            <TextInput
-              style={styles.passwordInput}
-              placeholder="Password"
-              secureTextEntry={!showPassword}
-              value={form.password}
-              onChangeText={(v) => handleChange("password", v)}
-            />
-            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-              <Ionicons
-                name={showPassword ? "eye-off" : "eye"}
-                size={20}
-                color="#999"
-              />
-            </TouchableOpacity>
+          <View style={styles.row}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.label}>Password *</Text>
+              <View style={styles.inputContainer}>
+                <View style={styles.passwordRow}>
+                  <TextInput style={styles.input} placeholder="Password" secureTextEntry={!showPassword} value={form.password} onChangeText={(v) => handleChange("password", v)} placeholderTextColor="#94A3B8" />
+                  <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                    <Ionicons name={showPassword ? "eye-outline" : "eye-off-outline"} size={18} color={ACCENT_BLUE} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+
+            <View style={{ flex: 1 }}>
+              <Text style={styles.label}>Confirm *</Text>
+              <View style={styles.inputContainer}>
+                <View style={styles.passwordRow}>
+                  <TextInput style={styles.input} placeholder="Confirm" secureTextEntry={!showConfirmPassword} value={form.confirm_password} onChangeText={(v) => handleChange("confirm_password", v)} placeholderTextColor="#94A3B8" />
+                  <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+                    <Ionicons name={showConfirmPassword ? "eye-outline" : "eye-off-outline"} size={18} color={ACCENT_BLUE} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
           </View>
 
-          {/* Confirm Password */}
-          <View style={styles.passwordWrapper}>
-            <TextInput
-              style={styles.passwordInput}
-              placeholder="Confirm password"
-              secureTextEntry={!showConfirmPassword}
-              value={form.confirm_password}
-              onChangeText={(v) => handleChange("confirm_password", v)}
-            />
-            <TouchableOpacity
-              onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-            >
-              <Ionicons
-                name={showConfirmPassword ? "eye-off" : "eye"}
-                size={20}
-                color="#999"
-              />
-            </TouchableOpacity>
-          </View>
-
-          {/* Password mismatch error */}
           {form.confirm_password.length > 0 && !passwordsMatch && (
             <Text style={styles.errorText}>Passwords do not match</Text>
           )}
 
-          {/* Password Requirements */}
+          {/* Password Requirements UI */}
           {form.password.length > 0 && (
             <View style={styles.requirementsBox}>
-              <Text style={styles.requirementsTitle}>Password must contain:</Text>
-              <View style={styles.requirementRow}>
-                <Text
-                  style={[
-                    styles.requirement,
-                    passwordValidation.hasMinLength && styles.requirementMet,
-                  ]}
-                >
-                  {passwordValidation.hasMinLength ? "✓" : "○"} 6+ characters
-                </Text>
-                <Text
-                  style={[
-                    styles.requirement,
-                    passwordValidation.hasUpperCase && styles.requirementMet,
-                  ]}
-                >
-                  {passwordValidation.hasUpperCase ? "✓" : "○"} Uppercase
-                </Text>
-              </View>
-              <View style={styles.requirementRow}>
-                <Text
-                  style={[
-                    styles.requirement,
-                    passwordValidation.hasLowerCase && styles.requirementMet,
-                  ]}
-                >
-                  {passwordValidation.hasLowerCase ? "✓" : "○"} Lowercase
-                </Text>
-                <Text
-                  style={[
-                    styles.requirement,
-                    passwordValidation.hasNumber && styles.requirementMet,
-                  ]}
-                >
-                  {passwordValidation.hasNumber ? "✓" : "○"} Number
-                </Text>
-              </View>
-              <View style={styles.requirementRow}>
-                <Text
-                  style={[
-                    styles.requirement,
-                    passwordValidation.hasSpecialChar && styles.requirementMet,
-                  ]}
-                >
-                  {passwordValidation.hasSpecialChar ? "✓" : "○"} Special char
-                </Text>
+              <Text style={styles.requirementsTitle}>Must contain:</Text>
+              <View style={styles.requirementsList}>
+                <View style={styles.requirementsColumn}>
+                  <Text style={[styles.requirement, passwordValidation.hasMinLength && styles.requirementMet]}>○ 6+ Characters</Text>
+                  <Text style={[styles.requirement, passwordValidation.hasUpperCase && styles.requirementMet]}>○ Uppercase</Text>
+                </View>
+                <View style={styles.requirementsColumn}>
+                  <Text style={[styles.requirement, passwordValidation.hasLowerCase && styles.requirementMet]}>○ Lowercase</Text>
+                  <Text style={[styles.requirement, passwordValidation.hasNumber && styles.requirementMet]}>○ Number</Text>
+                </View>
               </View>
             </View>
           )}
 
-          <ButtonComp title="Create Account" onPress={handleSignup} />
+          <TouchableOpacity style={styles.signUpBtn} onPress={handleSignup} activeOpacity={0.8}>
+            <Text style={styles.signUpBtnText}>Create Account</Text>
+          </TouchableOpacity>
 
-          <Text style={styles.footerText}>
-            Already have an account?{" "}
-            <Text
-              style={styles.footerLink}
-              onPress={() => router.push("/(auth)/login")}
-            >
-              Sign in
-            </Text>
-          </Text>
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>Already have an account? </Text>
+            <TouchableOpacity onPress={() => router.push("/(auth)/login")}>
+              <Text style={styles.footerLink}>Sign In</Text>
+            </TouchableOpacity>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -309,160 +197,53 @@ export default function SignupInstitution() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: scale(20),
-    paddingTop: verticalScale(40),
-    paddingBottom: verticalScale(40),
-    backgroundColor: "white",
+  safeArea: { flex: 1, backgroundColor: "white" },
+  container: { paddingHorizontal: 22, paddingTop: 30, paddingBottom: 40 },
+  header: { marginBottom: 25 },
+  title: { fontSize: 24, fontWeight: "700", color: TEXT_GRAY_22, marginBottom: 4 },
+  subtitle: { fontSize: 13, color: "#64748B", fontWeight: "500" },
+  
+  label: { fontSize: 13, fontWeight: "700", color: TEXT_GRAY_22, marginBottom: 8, marginTop: 4 },
+  
+  toggleContainer: { flexDirection: "row", gap: 10, marginBottom: 20 },
+  toggleButton: { 
+    flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", 
+    height: 38, borderWidth: 1.2, borderColor: BORDER_BLUE_200, borderRadius: 7, backgroundColor: "#fff", gap: 6
   },
-  title: {
-    fontSize: moderateScale(24),
-    fontWeight: "700",
-    color: "#000",
-    marginBottom: verticalScale(4),
+  toggleButtonActive: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", height: 38, backgroundColor: ACCENT_BLUE, borderRadius: 7, gap: 6 },
+  toggleText: { fontSize: 13, color: "#64748B", fontWeight: "600" },
+  toggleTextActive: { fontSize: 13, color: "#fff", fontWeight: "600" },
+
+  institutionGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 18 },
+  typeCard: { 
+    width: "48.5%", height: 42, justifyContent: "center", alignItems: "center", 
+    borderWidth: 1.2, borderColor: BORDER_BLUE_200, borderRadius: 7, backgroundColor: "#fff"
   },
-  subtitle: {
-    fontSize: moderateScale(14),
-    color: "#666",
-    marginBottom: verticalScale(24),
+  typeCardActive: { borderColor: ACCENT_BLUE, backgroundColor: "#EFF6FF" },
+  typeText: { fontSize: 13, color: "#64748B", fontWeight: "600" },
+  typeTextActive: { color: ACCENT_BLUE, fontWeight: "700" },
+
+  inputContainer: { 
+    borderWidth: 1.2, borderColor: BORDER_BLUE_200, borderRadius: 7, 
+    marginBottom: 14, paddingHorizontal: 12, height: 42, justifyContent: "center", backgroundColor: "#F8FAFC"
   },
-  toggleContainer: {
-    flexDirection: "row",
-    gap: scale(10),
-    marginBottom: verticalScale(20),
-  },
-  toggleButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: scale(6),
-    paddingVertical: verticalScale(12),
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: moderateScale(6),
-    backgroundColor: "#fff",
-  },
-  toggleButtonActive: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: scale(6),
-    paddingVertical: verticalScale(12),
-    borderWidth: 1,
-    borderColor: "#0A66C2",
-    borderRadius: moderateScale(6),
-    backgroundColor: "#0A66C2",
-  },
-  toggleText: {
-    fontSize: moderateScale(14),
-    color: "#666",
-    fontWeight: "500",
-  },
-  toggleTextActive: {
-    fontSize: moderateScale(14),
-    color: "#fff",
-    fontWeight: "600",
-  },
-  label: {
-    fontSize: moderateScale(13),
-    fontWeight: "600",
-    color: "#333",
-    marginBottom: verticalScale(10),
-  },
-  institutionGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: scale(10),
-    marginBottom: verticalScale(20),
-  },
-  typeCard: {
-    width: "48%",
-    paddingVertical: verticalScale(14),
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: moderateScale(6),
-    backgroundColor: "#fff",
-  },
-  typeCardActive: {
-    borderColor: "#0A66C2",
-    backgroundColor: "#E8F1FF",
-  },
-  typeText: {
-    fontSize: moderateScale(14),
-    color: "#666",
-    fontWeight: "500",
-  },
-  typeTextActive: {
-    color: "#0A66C2",
-    fontWeight: "600",
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: moderateScale(6),
-    padding: moderateScale(12),
-    marginBottom: verticalScale(14),
-    fontSize: moderateScale(14),
-  },
-  inputError: {
-    borderColor: "#EF4444",
-    marginBottom: verticalScale(4),
-  },
-  errorText: {
-    color: "#EF4444",
-    fontSize: moderateScale(11),
-    marginBottom: verticalScale(12),
-  },
-  passwordWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: moderateScale(6),
-    paddingHorizontal: scale(12),
-    marginBottom: verticalScale(14),
-  },
-  passwordInput: {
-    flex: 1,
-    paddingVertical: moderateScale(12),
-    fontSize: moderateScale(14),
-  },
-  requirementsBox: {
-    backgroundColor: "#F9F9F9",
-    padding: moderateScale(12),
-    borderRadius: moderateScale(6),
-    marginBottom: verticalScale(20),
-  },
-  requirementsTitle: {
-    fontSize: moderateScale(12),
-    fontWeight: "600",
-    color: "#333",
-    marginBottom: verticalScale(8),
-  },
-  requirementRow: {
-    flexDirection: "row",
-    gap: scale(20),
-    marginBottom: verticalScale(4),
-  },
-  requirement: {
-    fontSize: moderateScale(11),
-    color: "#999",
-  },
-  requirementMet: {
-    color: "#10B981",
-    fontWeight: "500",
-  },
-  footerText: {
-    marginTop: verticalScale(24),
-    textAlign: "center",
-    color: "#444",
-    fontSize: moderateScale(13),
-  },
-  footerLink: {
-    color: "#0A66C2",
-    fontWeight: "600",
-  },
+  input: { flex: 1, fontSize: 13.5, color: TEXT_GRAY_22, fontWeight: "500" },
+  row: { flexDirection: "row", gap: 10 },
+  passwordRow: { flexDirection: "row", alignItems: "center", flex: 1 },
+  inputError: { borderColor: "#EF4444" },
+  errorText: { color: "#EF4444", fontSize: 11, marginBottom: 12, marginTop: -10, fontWeight: "600" },
+
+  requirementsBox: { backgroundColor: "#F1F5F9", padding: 10, borderRadius: 7, marginBottom: 20, borderWidth: 1, borderColor: BORDER_BLUE_200 },
+  requirementsTitle: { fontSize: 11, fontWeight: "700", marginBottom: 6, color: TEXT_GRAY_22 },
+  requirementsList: { flexDirection: "row" },
+  requirementsColumn: { flex: 1 },
+  requirement: { fontSize: 10, color: "#94A3B8", marginBottom: 2, fontWeight: "600" },
+  requirementMet: { color: "#10B981" },
+
+  signUpBtn: { backgroundColor: ACCENT_BLUE, width: "100%", height: 42, borderRadius: 7, justifyContent: "center", alignItems: "center", marginBottom: 20, elevation: 1 },
+  signUpBtnText: { color: "#fff", fontSize: 14, fontWeight: "700" },
+  
+  footer: { flexDirection: "row", justifyContent: "center", marginTop: 5 },
+  footerText: { fontSize: 13, color: "#64748B" },
+  footerLink: { fontSize: 13, color: ACCENT_BLUE, fontWeight: "700" },
 });

@@ -1,3 +1,5 @@
+
+
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -33,15 +35,11 @@ export default function JobsScreen() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
-  // Top category filters (multi-select)
   const [activeCategories, setActiveCategories] = useState<string[]>([]);
-
-  // Bottom filter states
   const [activeType, setActiveType] = useState<string[]>([]);
   const [activeLocation, setActiveLocation] = useState<string[]>([]);
   const [activeRoles, setActiveRoles] = useState<string[]>([]);
 
-  // Modal state
   const [openModal, setOpenModal] = useState<"Type" | "Location" | "Roles" | "All" | null>(null);
 
   const insets = useSafeAreaInsets();
@@ -67,10 +65,10 @@ export default function JobsScreen() {
   };
 
   const toggleCategory = (label: string) => {
-  setActiveCategories((prev) =>
-    prev.includes(label) ? [] : [label]
-  );
-};
+    setActiveCategories((prev) =>
+      prev.includes(label) ? [] : [label]
+    );
+  };
 
   const toggleOption = (
     value: string,
@@ -96,89 +94,80 @@ export default function JobsScreen() {
 
   const filteredJobs = jobs.filter((j) => {
     const matchesSearch = j.title?.toLowerCase().includes(search.toLowerCase());
-
     const matchesType =
       activeType.length === 0 ||
-      activeType.some(
-        (t) => j.employment_type?.toLowerCase() === t.toLowerCase()
-      );
-
+      activeType.some((t) => j.employment_type?.toLowerCase() === t.toLowerCase());
     const matchesLocation =
       activeLocation.length === 0 ||
-      activeLocation.some(
-        (l) => j.location_type?.toLowerCase() === l.toLowerCase()
-      );
-
+      activeLocation.some((l) => j.location_type?.toLowerCase() === l.toLowerCase());
     return matchesSearch && matchesType && matchesLocation;
   });
 
   const bottomBarHeight = 64 + insets.bottom;
 
-  // Is function ko apne code mein dhundo aur isse replace kar do
-const renderJobCard = ({ item }: { item: any }) => (
-  <TouchableOpacity 
-    style={styles.jobCard} 
-    activeOpacity={0.7}
-    onPress={() => router.push({
-      pathname: "/(student)/job-details",
-      params: { job: JSON.stringify(item) } // Poora job object string banakar bhej rahe hain
-    })}
-  >
-    <View style={styles.cardHeader}>
-      <View style={styles.textContainer}>
-        <Text style={styles.jobTitle} numberOfLines={1}>
-          {item.title || "Untitled Role"}
+  const renderJobCard = ({ item }: { item: any }) => (
+    <TouchableOpacity 
+      style={styles.jobCard} 
+      activeOpacity={0.7}
+      onPress={() => router.push({
+        pathname: "/(student)/job-details",
+        params: { job: JSON.stringify(item) } 
+      })}
+    >
+      <View style={styles.cardHeader}>
+        <View style={styles.textContainer}>
+          <Text style={styles.jobTitle} numberOfLines={1}>
+            {item.title || "Untitled Role"}
+          </Text>
+          <Text style={styles.companyName}>Company Name</Text>
+        </View>
+      </View>
+
+      <View style={styles.infoRow}>
+        <Ionicons name="location-outline" size={13} color="#1F4FA3" />
+        <Text style={styles.infoText}>
+          {item.location_type || "Remote"} | {item.location || "N/A"}
         </Text>
-        <Text style={styles.companyName}>Company Name</Text>
       </View>
-    </View>
 
-    <View style={styles.infoRow}>
-      <Ionicons name="location-outline" size={13} color="#666" />
-      <Text style={styles.infoText}>
-        {item.location_type || "Remote"} | {item.location || "N/A"}
-      </Text>
-    </View>
-
-    <View style={styles.infoRow}>
-      <Text style={styles.salaryText}>
-        ₹ {item.pay_min || "-"} - ₹ {item.pay_max || "-"} /{" "}
-        {item.pay_rate || "month"}
-      </Text>
-    </View>
-
-    <View style={styles.tagRow}>
-      <View style={styles.tagPill}>
-        <Text style={styles.tagText}>Client Servicing</Text>
+      <View style={styles.infoRow}>
+        <Text style={styles.salaryText}>
+          ₹ {item.pay_min || "-"} - ₹ {item.pay_max || "-"} /{" "}
+          {item.pay_rate || "month"}
+        </Text>
       </View>
-      <View style={styles.morePill}>
-        <Text style={styles.moreText}>+3</Text>
+
+      <View style={styles.tagRow}>
+        <View style={styles.tagPill}>
+          <Text style={styles.tagText}>Client Servicing</Text>
+        </View>
+        <View style={styles.morePill}>
+          <Text style={styles.moreText}>+3</Text>
+        </View>
       </View>
-    </View>
 
-    <View style={styles.cardFooter}>
-      <Text style={styles.dateText}>
-        {item.created_at
-          ? new Date(item.created_at).toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            })
-          : "Recent"}
-      </Text>
-      <TouchableOpacity 
-        onPress={(e) => {
-          e.stopPropagation(); // Isse card click trigger nahi hoga, sirf heart click hoga
-          console.log("Saved!");
-        }}
-      >
-        <Ionicons name="heart-outline" size={18} color="#4285F4" />
-      </TouchableOpacity>
-    </View>
-  </TouchableOpacity>
-);
+      <View style={styles.cardFooter}>
+        <Text style={styles.dateText}>
+          {item.created_at
+            ? new Date(item.created_at).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })
+            : "Recent"}
+        </Text>
+        <TouchableOpacity 
+          onPress={(e) => {
+            e.stopPropagation(); 
+            console.log("Saved!");
+          }}
+        >
+          <Ionicons name="heart-outline" size={18} color="#1F4FA3" />
+        </TouchableOpacity>
+      </View>
+    </TouchableOpacity>
+  );
 
-  // Generic filter modal
   const renderModal = (
     title: string,
     options: string[],
@@ -249,7 +238,6 @@ const renderJobCard = ({ item }: { item: any }) => (
     </Modal>
   );
 
-  // All filters modal
   const renderAllFiltersModal = () => (
     <Modal
       visible={openModal === "All"}
@@ -351,7 +339,7 @@ const renderJobCard = ({ item }: { item: any }) => (
       <View style={styles.headerWrapper}>
         <View style={styles.searchContainer}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-            <Ionicons name="arrow-back" size={22} color="#333" />
+            <Ionicons name="arrow-back" size={22} color="#222222" />
           </TouchableOpacity>
           <View style={styles.searchBox}>
             <Ionicons name="search-outline" size={18} color="#999" />
@@ -387,7 +375,7 @@ const renderJobCard = ({ item }: { item: any }) => (
                   <MaterialCommunityIcons
                     name={icon as any}
                     size={16}
-                    color={active ? "#FFF" : "#333"}
+                    color={active ? "#FFF" : "#222222"}
                   />
                   <Text style={[styles.pillText, active && styles.activePillText]}>
                     {label}
@@ -400,7 +388,7 @@ const renderJobCard = ({ item }: { item: any }) => (
       </View>
 
       {loading ? (
-        <ActivityIndicator size="small" color="#4285F4" style={{ marginTop: 50 }} />
+        <ActivityIndicator size="small" color="#1F4FA3" style={{ marginTop: 50 }} />
       ) : (
         <FlatList
           data={filteredJobs}
@@ -423,7 +411,6 @@ const renderJobCard = ({ item }: { item: any }) => (
         />
       )}
 
-      {/* BOTTOM FILTER BAR */}
       <View style={[styles.bottomFilterBar, { paddingBottom: insets.bottom || 12 }]}>
         <TouchableOpacity
           style={[styles.bottomBtn, activeType.length > 0 && styles.activeBottomBtn]}
@@ -435,7 +422,7 @@ const renderJobCard = ({ item }: { item: any }) => (
           <Ionicons
             name="chevron-down"
             size={14}
-            color={activeType.length > 0 ? "#FFF" : "#333"}
+            color={activeType.length > 0 ? "#FFF" : "#222222"}
           />
         </TouchableOpacity>
 
@@ -476,7 +463,6 @@ const renderJobCard = ({ item }: { item: any }) => (
         </TouchableOpacity>
       </View>
 
-      {/* Modals */}
       {renderModal("Type", TYPE_OPTIONS, activeType, setActiveType)}
       {renderModal("Location", LOCATION_OPTIONS, activeLocation, setActiveLocation)}
       {renderModal("Roles", ROLE_OPTIONS, activeRoles, setActiveRoles)}
@@ -491,7 +477,7 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === "android" ? (StatusBar.currentHeight || 0) + 15 : 60,
     backgroundColor: "#FFF",
     borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
+    borderBottomColor: "#E2E8F0",
     paddingBottom: 5,
   },
   searchContainer: {
@@ -510,7 +496,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     height: 40,
   },
-  input: { flex: 1, marginLeft: 8, fontSize: 14, color: "#333" },
+  input: { flex: 1, marginLeft: 8, fontSize: 14, color: "#222222" },
   topFilterScroll: { marginBottom: 10 },
   pill: {
     flexDirection: "row",
@@ -519,12 +505,12 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#EEE",
+    borderColor: "#E2E8F0",
     marginRight: 8,
     backgroundColor: "#FFF",
   },
-  activePill: { backgroundColor: "#4285F4", borderColor: "#4285F4" },
-  pillText: { marginLeft: 6, fontSize: 12, fontWeight: "500", color: "#333" },
+  activePill: { backgroundColor: "#1F4FA3", borderColor: "#1F4FA3" },
+  pillText: { marginLeft: 6, fontSize: 12, fontWeight: "500", color: "#222222" },
   activePillText: { color: "#FFF" },
   listContent: { paddingHorizontal: 15, paddingTop: 15 },
   jobCard: {
@@ -533,7 +519,7 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: "#F0F0F0",
+    borderColor: "#E2E8F0",
     elevation: 2,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
@@ -542,42 +528,45 @@ const styles = StyleSheet.create({
   },
   cardHeader: { flexDirection: "row", marginBottom: 4 },
   textContainer: { flex: 1 },
-  jobTitle: { fontSize: 15, fontWeight: "700", color: "#1A1A1A" },
+  jobTitle: { fontSize: 15, fontWeight: "700", color: "#222222" },
   companyName: { fontSize: 12, color: "#888" },
   infoRow: { flexDirection: "row", alignItems: "center", marginTop: 4 },
   infoText: { marginLeft: 5, color: "#666", fontSize: 12 },
-  salaryText: { color: "#333", fontWeight: "600", fontSize: 12, marginTop: 4 },
+  salaryText: { color: "#222222", fontWeight: "600", fontSize: 12, marginTop: 4 },
   tagRow: { flexDirection: "row", marginTop: 12 },
   tagPill: {
     backgroundColor: "#F2F2F2",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
   },
-  tagText: { color: "#333", fontSize: 10, fontWeight: "600" },
+  tagText: { color: "#222222", fontSize: 10, fontWeight: "600" },
   morePill: {
     backgroundColor: "#F0F9F0",
     paddingHorizontal: 6,
     paddingVertical: 4,
     borderRadius: 12,
     marginLeft: 6,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
   },
-  moreText: { color: "#2E7D32", fontSize: 10, fontWeight: "700" },
+  moreText: { color: "#1F4FA3", fontSize: 10, fontWeight: "700" },
   cardFooter: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginTop: 12,
     borderTopWidth: 1,
-    borderTopColor: "#FAFAFA",
+    borderTopColor: "#E2E8F0",
     paddingTop: 10,
   },
-  dateText: { color: "#4285F4", fontWeight: "500", fontSize: 11 },
+  dateText: { color: "#1F4FA3", fontWeight: "500", fontSize: 11 },
   emptyState: { alignItems: "center", marginTop: 60, gap: 10 },
   emptyText: { color: "#999", fontSize: 14 },
-  emptyLink: { color: "#4285F4", fontSize: 13, fontWeight: "600" },
+  emptyLink: { color: "#1F4FA3", fontSize: 13, fontWeight: "600" },
 
-  // Bottom bar
   bottomFilterBar: {
     position: "absolute",
     bottom: 0,
@@ -590,13 +579,8 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     backgroundColor: "#FFF",
     borderTopWidth: 1,
-    borderTopColor: "#F0F0F0",
+    borderTopColor: "#E2E8F0",
     zIndex: 999,
-    elevation: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
   },
   bottomBtn: {
     backgroundColor: "#FFF",
@@ -604,26 +588,25 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#DDD",
+    borderColor: "#E2E8F0",
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
   },
-  activeBottomBtn: { backgroundColor: "#4285F4", borderColor: "#4285F4" },
+  activeBottomBtn: { backgroundColor: "#1F4FA3", borderColor: "#1F4FA3" },
   activeBottomBtnText: { color: "#FFF", fontWeight: "600", fontSize: 12 },
-  bottomBtnText: { color: "#333", fontWeight: "600", fontSize: 12 },
+  bottomBtnText: { color: "#222222", fontWeight: "600", fontSize: 12 },
   filterIconBtn: {
-    backgroundColor: "#1A233A",
+    backgroundColor: "#222222",
     padding: 11,
     borderRadius: 20,
-    elevation: 6,
   },
-  filterIconBtnActive: { backgroundColor: "#4285F4" },
+  filterIconBtnActive: { backgroundColor: "#1F4FA3" },
   filterBadge: {
     position: "absolute",
     top: -4,
     right: -4,
-    backgroundColor: "#FF3B30",
+    backgroundColor: "#EF4444",
     borderRadius: 8,
     width: 16,
     height: 16,
@@ -632,7 +615,6 @@ const styles = StyleSheet.create({
   },
   filterBadgeText: { color: "#FFF", fontSize: 9, fontWeight: "700" },
 
-  // Modal
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.4)",
@@ -648,7 +630,7 @@ const styles = StyleSheet.create({
   modalHandle: {
     width: 36,
     height: 4,
-    backgroundColor: "#E0E0E0",
+    backgroundColor: "#E2E8F0",
     borderRadius: 2,
     alignSelf: "center",
     marginBottom: 16,
@@ -659,8 +641,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
   },
-  modalTitle: { fontSize: 16, fontWeight: "700", color: "#1A1A1A" },
-  clearText: { fontSize: 13, color: "#4285F4", fontWeight: "600" },
+  modalTitle: { fontSize: 16, fontWeight: "700", color: "#222222" },
+  clearText: { fontSize: 13, color: "#1F4FA3", fontWeight: "600" },
   sectionLabel: {
     fontSize: 13,
     fontWeight: "700",
@@ -676,14 +658,14 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#DDD",
+    borderColor: "#E2E8F0",
     backgroundColor: "#FFF",
   },
-  optionChipActive: { backgroundColor: "#4285F4", borderColor: "#4285F4" },
-  optionChipText: { fontSize: 13, color: "#333", fontWeight: "500" },
+  optionChipActive: { backgroundColor: "#1F4FA3", borderColor: "#1F4FA3" },
+  optionChipText: { fontSize: 13, color: "#222222", fontWeight: "500" },
   optionChipTextActive: { color: "#FFF" },
   applyBtn: {
-    backgroundColor: "#4285F4",
+    backgroundColor: "#1F4FA3",
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: "center",

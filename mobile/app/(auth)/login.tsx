@@ -17,6 +17,11 @@ import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { apiRequest } from "../../services/api";
 
+// Style Constants
+const ACCENT_BLUE = "#1F4FA3";
+const TEXT_GRAY_22 = "#222222";
+const BORDER_BLUE_200 = "#BFDBFE";
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -53,7 +58,6 @@ export default function Login() {
           };
           router.replace(onboardingRoutes[type] || "/(auth)/login");
         } else {
-          // FIXED: Changed "/(student)/profile" to "/(student)" to hit Dashboard
           const dashboardRoutes: Record<number, any> = {
             3: "/(student)", 
             7: "/(company)",
@@ -71,7 +75,7 @@ export default function Login() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="dark-content" backgroundColor="#FFF" />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
@@ -86,11 +90,12 @@ export default function Login() {
           </View>
 
           <View style={styles.form}>
+           
             <View style={styles.inputContainer}>
               <TextInput
                 style={styles.input}
                 placeholder="Email"
-                placeholderTextColor="#999"
+                placeholderTextColor="#94A3B8"
                 keyboardType="email-address"
                 autoCapitalize="none"
                 value={email}
@@ -98,21 +103,22 @@ export default function Login() {
               />
             </View>
 
+            
             <View style={styles.inputContainer}>
               <View style={styles.passwordRow}>
                 <TextInput
                   style={styles.passwordInput}
                   placeholder="Password"
-                  placeholderTextColor="#999"
+                  placeholderTextColor="#94A3B8"
                   secureTextEntry={!showPassword}
                   value={password}
                   onChangeText={setPassword}
                 />
                 <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                   <Ionicons
-                    name={showPassword ? "eye" : "eye-off"}
-                    size={20}
-                    color="#666"
+                    name={showPassword ? "eye-outline" : "eye-off-outline"}
+                    size={18} 
+                    color={ACCENT_BLUE}
                   />
                 </TouchableOpacity>
               </View>
@@ -125,7 +131,7 @@ export default function Login() {
               <Text style={styles.forgotPasswordText}>Forgot password?</Text>
             </TouchableOpacity>
 
-            {/* THIN RECTANGULAR BUTTON */}
+            
             <TouchableOpacity 
               style={styles.signInBtn} 
               onPress={handleLogin}
@@ -149,39 +155,80 @@ export default function Login() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "white" },
-  scrollContainer: { paddingHorizontal: 22, paddingTop: 30 },
-  header: { marginBottom: 25 },
-  title: { fontSize: 28, fontWeight: "600", color: "#000", marginBottom: 4 },
-  subtitle: { fontSize: 14, color: "#666", fontWeight: "400" },
+  scrollContainer: { paddingHorizontal: 22, paddingTop: 35 }, 
+  header: { marginBottom: 35 }, 
+  title: { 
+    fontSize: 24, 
+    fontWeight: "700", 
+    color: TEXT_GRAY_22, 
+    marginBottom: 4 
+  },
+  subtitle: { 
+    fontSize: 13, 
+    color: "#64748B", 
+    fontWeight: "500" 
+  },
   form: { width: "100%" },
   inputContainer: { 
-    borderWidth: 1, 
-    borderColor: "#ccc", 
-    borderRadius: 4, 
-    marginBottom: 12, 
+    borderWidth: 1.2, 
+    borderColor: BORDER_BLUE_200, 
+    borderRadius: 7, 
+    marginBottom: 16, 
     paddingHorizontal: 12, 
-    height: 48, 
-    justifyContent: "center" 
+    height: 44, 
+    justifyContent: "center",
+    backgroundColor: "#F8FAFC"
   },
-  input: { fontSize: 15, color: "#000", height: "100%" },
+  input: { 
+    fontSize: 14, 
+    color: TEXT_GRAY_22, 
+    height: "100%",
+    fontWeight: "500"
+  },
   passwordRow: { flexDirection: "row", alignItems: "center" },
-  passwordInput: { flex: 1, fontSize: 15, color: "#000", height: "100%" },
-  forgotPassword: { marginBottom: 20, marginTop: 5 },
-  forgotPasswordText: { color: "#0052cc", fontSize: 15, fontWeight: "600" },
+  passwordInput: { 
+    flex: 1, 
+    fontSize: 14, 
+    color: TEXT_GRAY_22, 
+    height: "100%",
+    fontWeight: "500"
+  },
+  forgotPassword: { marginBottom: 25, marginTop: 2, alignSelf: "flex-start" }, 
+  forgotPasswordText: { 
+    color: ACCENT_BLUE, 
+    fontSize: 13, 
+    fontWeight: "700" 
+  },
   
-  // FIXED BUTTON: Thin and Rectangular
   signInBtn: { 
-    backgroundColor: "#0052cc", 
+    backgroundColor: ACCENT_BLUE, 
     width: "100%", 
     height: 44, 
-    borderRadius: 4, 
+    borderRadius: 7, 
     justifyContent: "center", 
     alignItems: "center", 
-    marginBottom: 25 
+    marginBottom: 25, 
+    elevation: 1,
   },
-  signInBtnText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+  signInBtnText: { 
+    color: "#fff", 
+    fontSize: 14, 
+    fontWeight: "700" 
+  },
   
-  footer: { flexDirection: "row", justifyContent: "center", alignItems: "center", marginTop: 10 },
-  footerText: { fontSize: 14, color: "#666" },
-  footerLink: { fontSize: 14, color: "#0052cc", fontWeight: "600" },
+  footer: { 
+    flexDirection: "row", 
+    justifyContent: "center", 
+    alignItems: "center", 
+    marginTop: 10 
+  },
+  footerText: { 
+    fontSize: 13, 
+    color: "#64748B" 
+  },
+  footerLink: { 
+    fontSize: 13, 
+    color: ACCENT_BLUE, 
+    fontWeight: "700" 
+  },
 });

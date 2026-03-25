@@ -11,7 +11,22 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import API_BASE_URL from "../../config/api";
 
-export default function StudentProfile() {
+import { useSafeAreaInsets, SafeAreaProvider } from "react-native-safe-area-context";
+
+const BLUE_ACCENT = "#1F4FA3";
+const TEXT_GRAY_22 = "#222222";
+const BORDER_BLUE_200 = "#BFDBFE";
+
+export default function StudentProfileWithSafeArea() {
+  return (
+    <SafeAreaProvider>
+      <StudentProfile />
+    </SafeAreaProvider>
+  );
+}
+
+function StudentProfile() {
+  const insets = useSafeAreaInsets(); 
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
@@ -55,14 +70,12 @@ export default function StudentProfile() {
       setExperience(data.experience || []);
       setSkills(data.skills || []);
     } catch (err: any) {
-      console.log("FETCH ERROR:", err?.response?.status, err?.message);
       if (err?.response?.status === 401) router.replace("/(auth)/login");
     } finally {
       setLoading(false);
     }
   };
 
-  // ─── PROFILE PICTURE 
   const pickImage = async (type: "avatar" | "banner") => {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -91,12 +104,10 @@ export default function StudentProfile() {
         Alert.alert("Success", "Image updated!");
       }
     } catch (err: any) {
-      console.log("IMAGE ERROR:", err?.response?.data || err?.message);
       Alert.alert("Error", "Failed to upload image");
     }
   };
 
-  // ─── BIO / HEADLINE ────────────────────────────────────────────
   const openEdit = (field: string, currentVal: string) => {
     setActiveField(field);
     setTempValue(currentVal || "");
@@ -115,7 +126,6 @@ export default function StudentProfile() {
     }
   };
 
-  // ─── EXPERIENCE ────────────────────────────────────────────────
   const handleAddExperience = async () => {
     if (!expForm.title || !expForm.company) {
       Alert.alert("Error", "Title and company are required");
@@ -129,7 +139,6 @@ export default function StudentProfile() {
       fetchProfile();
       Alert.alert("Success", "Experience added!");
     } catch (err: any) {
-      console.log("EXP ERROR:", err?.response?.data, err?.response?.status);
       Alert.alert("Error", err?.response?.data?.message || "Failed to add experience");
     }
   };
@@ -152,7 +161,6 @@ export default function StudentProfile() {
     ]);
   };
 
-  // ─── EDUCATION ─────────────────────────────────────────────────
   const handleAddEducation = async () => {
     if (!eduForm.degree || !eduForm.institution) {
       Alert.alert("Error", "Degree and institution are required");
@@ -166,7 +174,6 @@ export default function StudentProfile() {
       fetchProfile();
       Alert.alert("Success", "Education added!");
     } catch (err: any) {
-      console.log("EDU ERROR:", err?.response?.data, err?.response?.status);
       Alert.alert("Error", err?.response?.data?.message || "Failed to add education");
     }
   };
@@ -189,7 +196,6 @@ export default function StudentProfile() {
     ]);
   };
 
-  // ─── SKILLS ────────────────────────────────────────────────────
   const handleAddSkill = async () => {
     if (!skillInput.trim()) { Alert.alert("Error", "Enter a skill"); return; }
     try {
@@ -221,7 +227,6 @@ export default function StudentProfile() {
     ]);
   };
 
-  // ─── RESUME ────────────────────────────────────────────────────
   const handleUploadResume = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({ type: "application/pdf" });
@@ -241,7 +246,6 @@ export default function StudentProfile() {
         Alert.alert("Success", "Resume uploaded!");
       }
     } catch (err: any) {
-      console.log("RESUME ERROR:", err?.response?.data || err?.message);
       Alert.alert("Error", "Failed to upload resume");
     }
   };
@@ -267,8 +271,8 @@ export default function StudentProfile() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="#0A66C2" />
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#FFF" }}>
+        <ActivityIndicator size="large" color={BLUE_ACCENT} />
       </View>
     );
   }
@@ -279,17 +283,18 @@ export default function StudentProfile() {
 
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="#333" />
+          <Ionicons name="arrow-back" size={22} color={TEXT_GRAY_22} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Profile</Text>
         <TouchableOpacity>
-          <Ionicons name="settings-outline" size={22} color="#333" />
+          <Ionicons name="settings-outline" size={22} color={TEXT_GRAY_22} />
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-
-        {/* Banner */}
+      <ScrollView 
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 20 }]} 
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.bannerContainer}>
           {profile?.banner_image_url ? (
             <Image source={{ uri: profile.banner_image_url }} style={styles.bannerImage} />
@@ -301,7 +306,6 @@ export default function StudentProfile() {
           </TouchableOpacity>
         </View>
 
-        {/* Avatar */}
         <View style={styles.avatarWrapper}>
           <TouchableOpacity activeOpacity={0.9} onPress={() => setShowCam(!showCam)} style={styles.avatarCircle}>
             {profile?.profile_image_url ? (
@@ -320,12 +324,12 @@ export default function StudentProfile() {
 
           <TouchableOpacity onPress={() => openEdit("headline", profile?.headline)} style={styles.headlineRow}>
             <Text style={styles.headlineText}>{profile?.headline || "Add a headline"}</Text>
-            <Ionicons name="pencil" size={13} color="#0A66C2" />
+            <Ionicons name="pencil" size={13} color={BLUE_ACCENT} />
           </TouchableOpacity>
 
           {(profile?.city || profile?.state) && (
             <View style={styles.locationRow}>
-              <Ionicons name="location-outline" size={13} color="#888" />
+              <Ionicons name="location-outline" size={13} color="#64748B" />
               <Text style={styles.locationText}>{[profile?.city, profile?.state].filter(Boolean).join(", ")}</Text>
             </View>
           )}
@@ -338,7 +342,7 @@ export default function StudentProfile() {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>About</Text>
             <TouchableOpacity onPress={() => openEdit("bio", profile?.bio)}>
-              <Ionicons name="pencil-outline" size={18} color="#0A66C2" />
+              <Ionicons name="pencil-outline" size={18} color={BLUE_ACCENT} />
             </TouchableOpacity>
           </View>
           <Text style={styles.sectionBodyLabel}>
@@ -353,7 +357,7 @@ export default function StudentProfile() {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Experience</Text>
             <TouchableOpacity onPress={() => setExpModalVisible(true)}>
-              <Ionicons name="add" size={24} color="#0A66C2" />
+              <Ionicons name="add" size={24} color={BLUE_ACCENT} />
             </TouchableOpacity>
           </View>
           {experience.length === 0 ? (
@@ -362,7 +366,7 @@ export default function StudentProfile() {
             experience.map((exp, i) => (
               <View key={i} style={styles.itemCard}>
                 <View style={styles.itemIconBox}>
-                  <Ionicons name="briefcase-outline" size={16} color="#0A66C2" />
+                  <Ionicons name="briefcase-outline" size={16} color={BLUE_ACCENT} />
                 </View>
                 <View style={styles.itemInfo}>
                   <Text style={styles.itemTitle}>{exp.title}</Text>
@@ -388,7 +392,7 @@ export default function StudentProfile() {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Education</Text>
             <TouchableOpacity onPress={() => setEduModalVisible(true)}>
-              <Ionicons name="add" size={24} color="#0A66C2" />
+              <Ionicons name="add" size={24} color={BLUE_ACCENT} />
             </TouchableOpacity>
           </View>
           {education.length === 0 ? (
@@ -397,7 +401,7 @@ export default function StudentProfile() {
             education.map((edu, i) => (
               <View key={i} style={styles.itemCard}>
                 <View style={styles.itemIconBox}>
-                  <Ionicons name="school-outline" size={16} color="#0A66C2" />
+                  <Ionicons name="school-outline" size={16} color={BLUE_ACCENT} />
                 </View>
                 <View style={styles.itemInfo}>
                   <Text style={styles.itemTitle}>{edu.institution}</Text>
@@ -423,7 +427,7 @@ export default function StudentProfile() {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Skills</Text>
             <TouchableOpacity onPress={() => setSkillModalVisible(true)}>
-              <Ionicons name="add" size={24} color="#0A66C2" />
+              <Ionicons name="add" size={24} color={BLUE_ACCENT} />
             </TouchableOpacity>
           </View>
           {skills.length === 0 ? (
@@ -434,7 +438,7 @@ export default function StudentProfile() {
                 <View key={i} style={styles.skillTag}>
                   <Text style={styles.skillText}>{skill.skill_name}</Text>
                   <TouchableOpacity onPress={() => handleDeleteSkill(skill.id)}>
-                    <Ionicons name="close" size={14} color="#0A66C2" />
+                    <Ionicons name="close" size={14} color={BLUE_ACCENT} />
                   </TouchableOpacity>
                 </View>
               ))}
@@ -452,13 +456,13 @@ export default function StudentProfile() {
           {profile?.resume_url ? (
             <View>
               <View style={styles.resumeCard}>
-                <Ionicons name="document-text" size={24} color="#0A66C2" />
+                <Ionicons name="document-text" size={24} color={BLUE_ACCENT} />
                 <Text style={styles.resumeText}>Resume uploaded ✓</Text>
                 <Ionicons name="checkmark-circle" size={20} color="#10B981" />
               </View>
               <View style={styles.resumeBtnRow}>
                 <TouchableOpacity style={styles.resumeBtn} onPress={handleUploadResume}>
-                  <Ionicons name="refresh-outline" size={16} color="#0A66C2" />
+                  <Ionicons name="refresh-outline" size={16} color={BLUE_ACCENT} />
                   <Text style={styles.resumeBtnText}>Replace</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={[styles.resumeBtn, styles.resumeDeleteBtn]} onPress={handleDeleteResume}>
@@ -469,143 +473,112 @@ export default function StudentProfile() {
             </View>
           ) : (
             <TouchableOpacity style={styles.resumeDashedBox} onPress={handleUploadResume}>
-              <Ionicons name="cloud-upload-outline" size={28} color="#0A66C2" />
+              <Ionicons name="cloud-upload-outline" size={28} color={BLUE_ACCENT} />
               <Text style={styles.uploadMainText}>Upload your resume</Text>
               <Text style={styles.uploadSubText}>PDF format recommended</Text>
             </TouchableOpacity>
           )}
         </View>
 
-        <View style={{ height: 100 }} />
+        
+        <View style={{ height: insets.bottom }} />
       </ScrollView>
 
-      {/* EDIT MODAL */}
-      <Modal visible={editModalVisible} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalHeader}>
-              Update {activeField.charAt(0).toUpperCase() + activeField.slice(1)}
-            </Text>
-            <TextInput style={styles.modalInput} value={tempValue} onChangeText={setTempValue} multiline={activeField === "bio"} placeholder={`Enter your ${activeField}`} />
-            <TouchableOpacity style={styles.saveBtn} onPress={handleUpdate}>
-              <Text style={styles.saveBtnText}>Save Changes</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setEditModalVisible(false)}>
-              <Text style={styles.cancelText}>Cancel</Text>
-            </TouchableOpacity>
+      {/* MODALS */}
+      {[
+        { visible: editModalVisible, setVisible: setEditModalVisible, title: `Update ${activeField}`, btn: "Save Changes", action: handleUpdate },
+        { visible: expModalVisible, setVisible: setExpModalVisible, title: "Add Experience", btn: "Add Experience", action: handleAddExperience },
+        { visible: eduModalVisible, setVisible: setEduModalVisible, title: "Add Education", btn: "Add Education", action: handleAddEducation },
+        { visible: skillModalVisible, setVisible: setSkillModalVisible, title: "Add Skill", btn: "Add Skill", action: handleAddSkill }
+      ].map((m, idx) => (
+        <Modal key={idx} visible={m.visible} transparent animationType="slide">
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalHeader}>{m.title}</Text>
+              {m.title.includes("Skill") ? (
+                <TextInput style={styles.modalInput} placeholder="e.g. React Native" value={skillInput} onChangeText={setSkillInput} />
+              ) : m.title.includes("Experience") ? (
+                <>
+                  <TextInput style={styles.modalInput} placeholder="Job Title *" value={expForm.title} onChangeText={(v) => setExpForm({ ...expForm, title: v })} />
+                  <TextInput style={styles.modalInput} placeholder="Company *" value={expForm.company} onChangeText={(v) => setExpForm({ ...expForm, company: v })} />
+                  <TextInput style={styles.modalInput} placeholder="Start Date (YYYY-MM-DD)" value={expForm.start_date} onChangeText={(v) => setExpForm({ ...expForm, start_date: v })} />
+                  <TextInput style={styles.modalInput} placeholder="End Date (YYYY-MM-DD)" value={expForm.end_date} onChangeText={(v) => setExpForm({ ...expForm, end_date: v })} />
+                </>
+              ) : m.title.includes("Education") ? (
+                <>
+                  <TextInput style={styles.modalInput} placeholder="Degree *" value={eduForm.degree} onChangeText={(v) => setEduForm({ ...eduForm, degree: v })} />
+                  <TextInput style={styles.modalInput} placeholder="Institution *" value={eduForm.institution} onChangeText={(v) => setEduForm({ ...eduForm, institution: v })} />
+                  <TextInput style={styles.modalInput} placeholder="Start Year" value={eduForm.start_year} onChangeText={(v) => setEduForm({ ...eduForm, start_year: v })} />
+                  <TextInput style={styles.modalInput} placeholder="End Year" value={eduForm.end_year} onChangeText={(v) => setEduForm({ ...eduForm, end_year: v })} />
+                </>
+              ) : (
+                <TextInput style={styles.modalInput} value={tempValue} onChangeText={setTempValue} multiline={activeField === "bio"} />
+              )}
+              <TouchableOpacity style={styles.saveBtn} onPress={m.action}>
+                <Text style={styles.saveBtnText}>{m.btn}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => m.setVisible(false)}>
+                <Text style={styles.cancelText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </Modal>
-
-      {/* ADD EXPERIENCE MODAL */}
-      <Modal visible={expModalVisible} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalHeader}>Add Experience</Text>
-            <TextInput style={styles.modalInput} placeholder="Job Title *" value={expForm.title} onChangeText={(v) => setExpForm({ ...expForm, title: v })} />
-            <TextInput style={styles.modalInput} placeholder="Company *" value={expForm.company} onChangeText={(v) => setExpForm({ ...expForm, company: v })} />
-            <TextInput style={styles.modalInput} placeholder="Start Date (YYYY-MM-DD)" value={expForm.start_date} onChangeText={(v) => setExpForm({ ...expForm, start_date: v })} />
-            <TextInput style={styles.modalInput} placeholder="End Date (YYYY-MM-DD)" value={expForm.end_date} onChangeText={(v) => setExpForm({ ...expForm, end_date: v })} />
-            <TextInput style={[styles.modalInput, { minHeight: 60 }]} placeholder="Description" value={expForm.description} onChangeText={(v) => setExpForm({ ...expForm, description: v })} multiline />
-            <TouchableOpacity style={styles.saveBtn} onPress={handleAddExperience}>
-              <Text style={styles.saveBtnText}>Add Experience</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setExpModalVisible(false)}>
-              <Text style={styles.cancelText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
-      {/* ADD EDUCATION MODAL */}
-      <Modal visible={eduModalVisible} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalHeader}>Add Education</Text>
-            <TextInput style={styles.modalInput} placeholder="Degree *" value={eduForm.degree} onChangeText={(v) => setEduForm({ ...eduForm, degree: v })} />
-            <TextInput style={styles.modalInput} placeholder="Institution *" value={eduForm.institution} onChangeText={(v) => setEduForm({ ...eduForm, institution: v })} />
-            <TextInput style={styles.modalInput} placeholder="Field of Study" value={eduForm.field_of_study} onChangeText={(v) => setEduForm({ ...eduForm, field_of_study: v })} />
-            <TextInput style={styles.modalInput} placeholder="Start Year (e.g. 2020)" value={eduForm.start_year} onChangeText={(v) => setEduForm({ ...eduForm, start_year: v })} keyboardType="numeric" />
-            <TextInput style={styles.modalInput} placeholder="End Year (e.g. 2024)" value={eduForm.end_year} onChangeText={(v) => setEduForm({ ...eduForm, end_year: v })} keyboardType="numeric" />
-            <TouchableOpacity style={styles.saveBtn} onPress={handleAddEducation}>
-              <Text style={styles.saveBtnText}>Add Education</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setEduModalVisible(false)}>
-              <Text style={styles.cancelText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
-      {/* ADD SKILL MODAL */}
-      <Modal visible={skillModalVisible} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalHeader}>Add Skill</Text>
-            <TextInput style={styles.modalInput} placeholder="e.g. React Native, Python..." value={skillInput} onChangeText={setSkillInput} />
-            <TouchableOpacity style={styles.saveBtn} onPress={handleAddSkill}>
-              <Text style={styles.saveBtnText}>Add Skill</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setSkillModalVisible(false)}>
-              <Text style={styles.cancelText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
+        </Modal>
+      ))}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   mainContainer: { flex: 1, backgroundColor: "#FFF" },
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 15, paddingBottom: 10, paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 50, backgroundColor: "#FFF", borderBottomWidth: 0.5, borderBottomColor: "#EEE" },
-  headerTitle: { fontSize: 17, fontWeight: "700" },
+  header: { 
+    flexDirection: "row", justifyContent: "space-between", alignItems: "center", 
+    paddingHorizontal: 22, paddingBottom: 12, paddingTop: Platform.OS === "android" ? (StatusBar.currentHeight || 0) + 10 : 50, 
+    backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: BORDER_BLUE_200 
+  },
+  headerTitle: { fontSize: 17, fontWeight: "700", color: TEXT_GRAY_22 },
   scrollContent: { flexGrow: 1 },
-  bannerContainer: { width: "100%", height: 90 },
-  bannerImage: { width: "100%", height: 90 },
-  darkBanner: { height: 90, backgroundColor: "#1E293B" },
+  bannerContainer: { width: "100%", height: 100 },
+  bannerImage: { width: "100%", height: 100 },
+  darkBanner: { height: 100, backgroundColor: "#1E293B" },
   bannerCam: { position: "absolute", bottom: 10, right: 15, backgroundColor: "rgba(0,0,0,0.6)", padding: 7, borderRadius: 20 },
-  avatarWrapper: { alignItems: "center", marginTop: -45, marginBottom: 16 },
-  avatarCircle: { width: 90, height: 90, borderRadius: 45, backgroundColor: "#0A66C2", justifyContent: "center", alignItems: "center", borderWidth: 3, borderColor: "#FFF", overflow: "hidden" },
-  avatarImage: { width: 90, height: 90, borderRadius: 45 },
+  avatarWrapper: { alignItems: "center", marginTop: -50, marginBottom: 16 },
+  avatarCircle: { width: 100, height: 100, borderRadius: 50, backgroundColor: BLUE_ACCENT, justifyContent: "center", alignItems: "center", borderWidth: 4, borderColor: "#FFF", overflow: "hidden" },
+  avatarImage: { width: 100, height: 100, borderRadius: 50 },
   camOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center" },
-  avatarText: { fontSize: 36, color: "#FFF", fontWeight: "bold" },
-  userName: { fontSize: 22, fontWeight: "700", marginTop: 10 },
-  headlineRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 4, paddingHorizontal: 30 },
-  headlineText: { color: "#64748B", fontSize: 13, textAlign: "center" },
-  locationRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 4 },
-  locationText: { color: "#888", fontSize: 12 },
-  divider: { height: 8, backgroundColor: "#F3F3F3", width: "100%" },
-  sectionContainer: { padding: 18 },
-  sectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
-  sectionTitle: { fontSize: 17, fontWeight: "700", color: "#1E293B" },
-  sectionBodyLabel: { color: "#64748B", fontSize: 14, lineHeight: 20 },
-  itemCard: { flexDirection: "row", alignItems: "flex-start", gap: 12, marginBottom: 14 },
-  itemIconBox: { width: 36, height: 36, borderRadius: 10, backgroundColor: "#EFF6FF", justifyContent: "center", alignItems: "center" },
+  avatarText: { fontSize: 40, color: "#FFF", fontWeight: "bold" },
+  userName: { fontSize: 22, fontWeight: "700", marginTop: 10, color: TEXT_GRAY_22 },
+  headlineRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 6, paddingHorizontal: 30 },
+  headlineText: { color: "#64748B", fontSize: 13, textAlign: "center", fontWeight: "600" },
+  locationRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 6 },
+  locationText: { color: "#64748B", fontSize: 12, fontWeight: "500" },
+  divider: { height: 8, backgroundColor: "#F8FAFC", width: "100%" },
+  sectionContainer: { padding: 22 },
+  sectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 15 },
+  sectionTitle: { fontSize: 17, fontWeight: "700", color: TEXT_GRAY_22 },
+  sectionBodyLabel: { color: "#64748B", fontSize: 13.5, lineHeight: 20, fontWeight: "500" },
+  itemCard: { flexDirection: "row", alignItems: "flex-start", gap: 12, marginBottom: 18 },
+  itemIconBox: { width: 40, height: 40, borderRadius: 8, backgroundColor: "#EFF6FF", justifyContent: "center", alignItems: "center", borderWidth: 1, borderColor: BORDER_BLUE_200 },
   itemInfo: { flex: 1 },
-  itemTitle: { fontSize: 14, fontWeight: "700", color: "#1E293B" },
-  itemSub: { fontSize: 13, color: "#64748B", marginTop: 2 },
-  itemDate: { fontSize: 12, color: "#94A3B8", marginTop: 2 },
+  itemTitle: { fontSize: 14.5, fontWeight: "700", color: TEXT_GRAY_22 },
+  itemSub: { fontSize: 13, color: "#64748B", marginTop: 2, fontWeight: "600" },
+  itemDate: { fontSize: 12, color: "#94A3B8", marginTop: 2, fontWeight: "500" },
   skillsRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  skillTag: { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "#EFF6FF", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: "#BFDBFE" },
-  skillText: { fontSize: 13, color: "#0A66C2", fontWeight: "600" },
-  resumeCard: { flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: "#F0F7FF", padding: 14, borderRadius: 12, borderWidth: 1, borderColor: "#BFDBFE" },
-  resumeText: { flex: 1, fontSize: 14, fontWeight: "600", color: "#1E293B" },
-  resumeBtnRow: { flexDirection: "row", gap: 10, marginTop: 10 },
-  resumeBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, padding: 10, borderRadius: 8, borderWidth: 1, borderColor: "#BFDBFE", backgroundColor: "#F0F7FF" },
+  skillTag: { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "#F8FAFC", paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, borderWidth: 1.2, borderColor: BORDER_BLUE_200 },
+  skillText: { fontSize: 13, color: BLUE_ACCENT, fontWeight: "700" },
+  resumeCard: { flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: "#F8FAFC", padding: 14, borderRadius: 10, borderWidth: 1.2, borderColor: BORDER_BLUE_200 },
+  resumeText: { flex: 1, fontSize: 14, fontWeight: "700", color: TEXT_GRAY_22 },
+  resumeBtnRow: { flexDirection: "row", gap: 10, marginTop: 12 },
+  resumeBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, height: 40, borderRadius: 8, borderWidth: 1.2, borderColor: BORDER_BLUE_200, backgroundColor: "#FFF" },
   resumeDeleteBtn: { borderColor: "#FEE2E2", backgroundColor: "#FFF5F5" },
-  resumeBtnText: { fontSize: 13, fontWeight: "600", color: "#0A66C2" },
-  resumeDashedBox: { borderStyle: "dashed", borderWidth: 1.5, borderColor: "#CBD5E1", borderRadius: 12, padding: 24, alignItems: "center", marginTop: 10, gap: 6 },
-  uploadMainText: { color: "#0A66C2", fontWeight: "700", fontSize: 14 },
-  uploadSubText: { color: "#94A3B8", fontSize: 12 },
-  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.7)", justifyContent: "flex-end" },
-  modalContent: { backgroundColor: "#FFF", padding: 24, borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: "85%" },
-  modalHeader: { fontSize: 17, fontWeight: "700", marginBottom: 14 },
-  modalInput: { borderWidth: 1, borderColor: "#E2E8F0", padding: 12, borderRadius: 10, marginBottom: 12, fontSize: 14 },
-  saveBtn: { backgroundColor: "#0A66C2", padding: 14, borderRadius: 10, alignItems: "center", marginTop: 4 },
+  resumeBtnText: { fontSize: 13, fontWeight: "700", color: BLUE_ACCENT },
+  resumeDashedBox: { borderStyle: "dashed", borderWidth: 1.5, borderColor: BORDER_BLUE_200, borderRadius: 12, padding: 25, alignItems: "center", marginTop: 10, backgroundColor: "#F8FAFC" },
+  uploadMainText: { color: BLUE_ACCENT, fontWeight: "700", fontSize: 14 },
+  uploadSubText: { color: "#94A3B8", fontSize: 12, fontWeight: "500" },
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
+  modalContent: { backgroundColor: "#FFF", padding: 24, borderTopLeftRadius: 20, borderTopRightRadius: 20 },
+  modalHeader: { fontSize: 18, fontWeight: "700", marginBottom: 18, color: TEXT_GRAY_22 },
+  modalInput: { borderWidth: 1.2, borderColor: BORDER_BLUE_200, padding: 12, borderRadius: 8, marginBottom: 12, fontSize: 14, backgroundColor: "#F8FAFC", color: TEXT_GRAY_22 },
+  saveBtn: { backgroundColor: BLUE_ACCENT, height: 44, borderRadius: 8, alignItems: "center", justifyContent: "center", marginTop: 8 },
   saveBtnText: { color: "#FFF", fontWeight: "700", fontSize: 15 },
-  cancelText: { textAlign: "center", marginTop: 14, color: "#64748B", fontSize: 14 },
+  cancelText: { textAlign: "center", marginTop: 16, color: "#64748B", fontSize: 14, fontWeight: "600" },
 });
-
-
