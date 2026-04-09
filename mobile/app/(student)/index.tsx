@@ -105,8 +105,11 @@
 //             <Text style={styles.cardText}>Events</Text>
 //           </TouchableOpacity>
 
-//           {/* Skill Tests */}
-//           <TouchableOpacity style={styles.bigCard}>
+//           {/* Skill Tests - FIXED: Added onPress */}
+//           <TouchableOpacity 
+//             style={styles.bigCard}
+//             onPress={() => router.push("/(student)/skill-tests")}
+//           >
 //             <View style={styles.iconCircle}>
 //               <FontAwesome5 name="graduation-cap" size={22} color={BLUE_ACCENT} />
 //             </View>
@@ -193,6 +196,7 @@
 //   },
 // });
 
+
 import React from "react";
 import {
   View,
@@ -209,7 +213,6 @@ import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-ico
 import { router } from "expo-router"; 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// Constraints
 const BLUE_ACCENT = "#1F4FA3";
 const TEXT_GRAY_22 = "#222222";
 const BORDER_BLUE_200 = "#BFDBFE";
@@ -300,7 +303,7 @@ export default function StudentDashboard() {
             <Text style={styles.cardText}>Events</Text>
           </TouchableOpacity>
 
-          {/* Skill Tests - FIXED: Added onPress */}
+          {/* Skill Tests */}
           <TouchableOpacity 
             style={styles.bigCard}
             onPress={() => router.push("/(student)/skill-tests")}
@@ -309,6 +312,17 @@ export default function StudentDashboard() {
               <FontAwesome5 name="graduation-cap" size={22} color={BLUE_ACCENT} />
             </View>
             <Text style={styles.cardText} numberOfLines={1}>Skill Tests</Text>
+          </TouchableOpacity>
+
+          {/* Certificates — NEW */}
+          <TouchableOpacity 
+            style={styles.bigCard}
+            onPress={() => router.push("/(student)/certificates")}
+          >
+            <View style={styles.iconCircle}>
+              <MaterialCommunityIcons name="certificate-outline" size={26} color={BLUE_ACCENT} />
+            </View>
+            <Text style={styles.cardText} numberOfLines={1}>Certificates</Text>
           </TouchableOpacity>
         </View>
 
